@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Penjana One Page Report (OPR) Rasmi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans, Merriweather & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;0,900;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- html2pdf.js untuk muat turun PDF terus -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <style>
+        :root {
+            --theme-primary: #1e3a8a;
+            --theme-secondary: #1e40af;
+            --theme-light: #eff6ff;
+            --theme-accent: #d97706;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        .font-serif-formal {
+            font-family: 'Merriweather', serif;
+        }
+
+        .font-inter {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Saiz Sebenar Kertas A4 (210mm x 297mm) */
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            min-width: 210mm;
+            min-height: 297mm;
+            max-width: 210mm;
+            max-height: 297mm;
+            background: #ffffff;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 10px 10px -5px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            position: relative;
+            box-sizing: border-box;
+            transform-origin: top center;
+            transition: transform 0.2s ease;
+        }
+
+        /* Custom Scrollbar untuk Panel Borang */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Konfigurasi Khas Cetakan & Save as PDF */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            html, body {
+                width: 210mm;
+                height: 297mm;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+                overflow: hidden !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            #preview-wrapper {
+                padding: 0 !important;
+                margin: 0 !important;
+                background: transparent !important;
+                overflow: visible !important;
+                display: block !important;
+                width: 210mm !important;
+                height: 297mm !important;
+            }
+            #preview-scaler {
+                transform: none !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                margin: 0 !important;
+            }
+            .a4-page {
+                box-shadow: none !important;
+                margin: 0 !important;
+                transform: none !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- Notifikasi Toast (Gantian kepada alert) -->
+    <div id="toast-container" class="no-print fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Bar Navigasi Atas -->
+    <header class="no-print sticky top-0 z-30 bg-white border-b border-slate-200 px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-sm">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Penjana One Page Report (OPR)</h1>
+                    <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">Edisi Kreatif & Rasmi</span>
+                </div>
+                <p class="text-xs text-slate-500">Sistem Pelaporan Satu Muka Surat Automatik • Format Piawai A4</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button type="button" onclick="loadSampleData()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
+                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                <span>Isi Contoh Data</span>
+            </button>
+
+            <button type="button" onclick="resetForm()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition cursor-pointer" title="Kosongkan Borang">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                <span class="hidden md:inline">Set Semula</span>
+            </button>
+
+            <button type="button" onclick="printDirect()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl transition cursor-pointer" title="Cetak atau Simpan PDF melalui Pelayar">
+                <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                <span class="hidden sm:inline">Cetak</span>
+            </button>
+
+            <button type="button" id="btn-download-pdf" onclick="generatePDF()" class="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-sm transition cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                <span>Jana & Muat Turun PDF</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Tab Navigasi Mudah Alih (Mobile View Switcher) -->
+    <div class="no-print lg:hidden bg-white border-b border-slate-200 px-4 py-2 flex gap-2">
+        <button type="button" id="tab-edit" onclick="switchMobileTab('edit')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-900 text-white transition">
+            1. Isi Maklumat & Rekabentuk
+        </button>
+        <button type="button" id="tab-preview" onclick="switchMobileTab('preview')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 transition">
+            2. Pratonton Laporan A4
+        </button>
+    </div>
+
+    <!-- Ruang Kerja Utama (Split Screen) -->
+    <main class="flex flex-col lg:flex-row lg:h-[calc(100vh-65px)] overflow-hidden">
+        
+        <!-- PANEL KIRI: Borang Input & Tetapan Rekabentuk -->
+        <section id="panel-editor" class="no-print w-full lg:w-[460px] xl:w-[500px] bg-white border-r border-slate-200 flex-shrink-0 overflow-y-auto custom-scrollbar p-4 sm:p-6 space-y-6">
+            
+            <!-- Seksyen 1: Pilihan Rekabentuk & Warna Tema -->
+            <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-blue-900 text-white text-xs flex items-center justify-center font-bold">1</span>
+                        Rekabentuk, Gaya Bingkai & Tema
+                    </h2>
+                </div>
+
+                <!-- 5 Pilihan Template Kreatif & Rasmi -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button type="button" onclick="setTemplate('editorial')" id="tpl-btn-editorial" class="tpl-btn text-left p-3 rounded-xl border-2 border-blue-900 bg-blue-50/60 transition cursor-pointer">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold text-slate-900">Editorial Majalah</span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-900 tpl-dot"></span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 leading-tight">Kolum asimetri ala penerbitan korporat, petikan impak & kolaj bertingkat.</p>
+                    </button>
+
+                    <button type="button" onclick="setTemplate('infografik')" id="tpl-btn-infografik" class="tpl-btn text-left p-3 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 transition cursor-pointer">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold text-slate-900">Infografik Moden</span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-transparent tpl-dot"></span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 leading-tight">Sepanduk geometri berlapis, kad berikon gradien halus & garis masa visual.</p>
+                    </button>
+
+                    <button type="button" onclick="setTemplate('eksekutif_split')" id="tpl-btn-eksekutif_split" class="tpl-btn text-left p-3 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 transition cursor-pointer">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold text-slate-900">Eksekutif Korporat</span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-transparent tpl-dot"></span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 leading-tight">Panel sisi kiri menegak beridentiti penuh dengan ruangan naratif kanan.</p>
+                    </button>
+
+                    <button type="button" onclick="setTemplate('klasik')" id="tpl-btn-klasik" class="tpl-btn text-left p-3 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 transition cursor-pointer">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold text-slate-900">Klasik Berprestij</span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-transparent tpl-dot"></span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 leading-tight">Kepala rasmi berlapis emas/aksen, jadual formal agensi & bingkai kemas.</p>
+                    </button>
+
+                    <button type="button" onclick="setTemplate('bento')" id="tpl-btn-bento" class="tpl-btn sm:col-span-2 text-left p-3 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 transition cursor-pointer">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold text-slate-900">Grid Modular Kontemporari (Bento Grid)</span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-transparent tpl-dot"></span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 leading-tight">Susun atur kad modular 'Bento Box' dengan hierarki visual moden dan sudut kemas.</p>
+                    </button>
+                </div>
+
+                <!-- Pilihan Gaya Bingkai Gambar -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Gaya Bingkai Gambar Dokumentasi</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="setPhotoFrame('bulat')" data-frame="bulat" class="frame-btn py-1.5 px-2 rounded-lg border-2 border-blue-900 bg-white text-[11px] font-bold text-slate-900 cursor-pointer transition">
+                            Sudut Bulat
+                        </button>
+                        <button type="button" onclick="setPhotoFrame('tajam')" data-frame="tajam" class="frame-btn py-1.5 px-2 rounded-lg border border-slate-200 bg-white text-[11px] font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition">
+                            Sudut Tajam
+                        </button>
+                        <button type="button" onclick="setPhotoFrame('polaroid')" data-frame="polaroid" class="frame-btn py-1.5 px-2 rounded-lg border border-slate-200 bg-white text-[11px] font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition">
+                            Bingkai Polaroid
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ketetapan Saiz & Nisbah Paparan Gambar -->
+                <div class="pt-2 border-t border-slate-200/80 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-semibold text-slate-700">Ketetapan Paparan & Saiz Gambar</label>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Tanpa Potong</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-1.5">
+                        <button type="button" onclick="setPhotoDisplayMode('full_original')" data-pmode="full_original" class="pmode-btn text-left px-3 py-2 rounded-xl border-2 border-blue-900 bg-white transition cursor-pointer">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11.5px] font-bold text-slate-900">Saiz Penuh Asal (Tanpa Potong)</span>
+                                <span class="w-2 h-2 rounded-full bg-blue-900 pmode-dot"></span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 leading-tight mt-0.5">Papar 100% keseluruhan gambar mengikut nisbah asal tanpa memotong tepi.</p>
+                        </button>
+
+                        <button type="button" onclick="setPhotoDisplayMode('uniform_contain')" data-pmode="uniform_contain" class="pmode-btn text-left px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition cursor-pointer">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11.5px] font-semibold text-slate-800">Ketinggian Tetap Seragam (Penuh)</span>
+                                <span class="w-2 h-2 rounded-full bg-transparent pmode-dot"></span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 leading-tight mt-0.5">Bingkai seragam kemas dengan keseluruhan gambar kekal penuh di dalam bingkai.</p>
+                        </button>
+
+                        <button type="button" onclick="setPhotoDisplayMode('custom')" data-pmode="custom" class="pmode-btn text-left px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition cursor-pointer">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11.5px] font-semibold text-slate-800">Ketetapan Saiz Tersuai (Tinggi & Nisbah)</span>
+                                <span class="w-2 h-2 rounded-full bg-transparent pmode-dot"></span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 leading-tight mt-0.5">Laras ketinggian maksimum, nisbah bingkai & mod muatan gambar secara manual.</p>
+                        </button>
+                    </div>
+
+                    <!-- Kawalan Terperinci untuk Ketetapan Saiz Tersuai -->
+                    <div id="custom-photo-controls" class="hidden p-3 rounded-xl bg-white border border-slate-200 space-y-2.5">
+                        <div>
+                            <div class="flex items-center justify-between text-[11px] mb-1">
+                                <span class="font-semibold text-slate-700">Ketinggian Maksimum Gambar</span>
+                                <span id="custom-height-label" class="font-bold text-blue-900">135px</span>
+                            </div>
+                            <input type="range" id="input-photo-height" min="80" max="220" step="5" value="135" oninput="updateCustomPhotoSettings()" class="w-full accent-blue-900 cursor-pointer">
+                            <div class="flex justify-between text-[9.5px] text-slate-400">
+                                <span>80px (Padat)</span>
+                                <span>150px (Sederhana)</span>
+                                <span>220px (Besar)</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10.5px] font-semibold text-slate-700 mb-1">Nisbah Bingkai</label>
+                                <select id="input-photo-ratio" onchange="updateCustomPhotoSettings()" class="w-full px-2 py-1.5 text-[11px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-900">
+                                    <option value="auto">Auto Asal</option>
+                                    <option value="16/9">16:9 (Landskap)</option>
+                                    <option value="4/3">4:3 (Standard)</option>
+                                    <option value="1/1">1:1 (Segi Empat)</option>
+                                    <option value="3/4">3:4 (Potret)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10.5px] font-semibold text-slate-700 mb-1">Mod Paparan</label>
+                                <select id="input-photo-fit" onchange="updateCustomPhotoSettings()" class="w-full px-2 py-1.5 text-[11px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-900">
+                                    <option value="contain">Papar Penuh (Contain)</option>
+                                    <option value="cover">Isi Bingkai (Cover)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pilihan Warna Tema -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-2">Warna Korporat Utama</label>
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <button type="button" onclick="setThemeColor('biru')" data-color="biru" class="color-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-blue-900 bg-white text-xs font-semibold text-slate-800 cursor-pointer">
+                            <span class="w-3.5 h-3.5 rounded-full bg-[#1e3a8a]"></span> Biru Korporat
+                        </button>
+                        <button type="button" onclick="setThemeColor('zamrud')" data-color="zamrud" class="color-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">
+                            <span class="w-3.5 h-3.5 rounded-full bg-[#065f46]"></span> Hijau Zamrud
+                        </button>
+                        <button type="button" onclick="setThemeColor('marun')" data-color="marun" class="color-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">
+                            <span class="w-3.5 h-3.5 rounded-full bg-[#881337]"></span> Merah Marun
+                        </button>
+                        <button type="button" onclick="setThemeColor('kelabu')" data-color="kelabu" class="color-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">
+                            <span class="w-3.5 h-3.5 rounded-full bg-[#1e293b]"></span> Kelabu Eksekutif
+                        </button>
+                        <button type="button" onclick="setThemeColor('ungu')" data-color="ungu" class="color-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">
+                            <span class="w-3.5 h-3.5 rounded-full bg-[#4c1d95]"></span> Ungu Diraja
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seksyen 2: Identiti Organisasi & Kepala Laporan -->
+            <div class="space-y-4">
+                <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <span class="w-6 h-6 rounded-lg bg-blue-900 text-white text-xs flex items-center justify-center font-bold">2</span>
+                    Identiti Organisasi & Tajuk Laporan
+                </h2>
+
+                <!-- Muat Naik Logo -->
+                <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                    <div id="logo-thumb-box" class="w-12 h-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <svg id="logo-placeholder-icon" class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <img id="logo-thumb-img" src="" alt="Logo" class="hidden w-full h-full object-contain">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <label class="block text-xs font-bold text-slate-800">Logo Organisasi / Jabatan / Sekolah</label>
+                        <p class="text-[11px] text-slate-500 truncate">Format PNG/JPG lutsinar disyorkan.</p>
+                        <div class="mt-1.5 flex items-center gap-2">
+                            <label class="inline-flex items-center px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">
+                                <span>Pilih Fail Logo</span>
+                                <input type="file" id="input-logo" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+                            </label>
+                            <button type="button" id="btn-remove-logo" onclick="removeLogo()" class="hidden text-xs text-rose-600 hover:underline font-medium cursor-pointer">Buang</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Organisasi / Jabatan / Sekolah</label>
+                    <input type="text" id="input-org" oninput="updateReport()" placeholder="Contoh: SEKOLAH MENENGAH KEBANGSAAN SERI PERDANA" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Unit / Bahagian / Sub-Organisasi (Pilihan)</label>
+                    <input type="text" id="input-suborg" oninput="updateReport()" placeholder="Contoh: Unit Kokurikulum & Hal Ehwal Murid" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori Pelaporan</label>
+                        <select id="input-category" onchange="updateReport()" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900">
+                            <option value="LAPORAN PROGRAM">Laporan Program</option>
+                            <option value="LAPORAN AKTIVITI">Laporan Aktiviti</option>
+                            <option value="LAPORAN MESYUARAT / TAKLIMAT">Laporan Mesyuarat / Taklimat</option>
+                            <option value="LAPORAN LAWATAN SAMBIL BELAJAR">Laporan Lawatan</option>
+                            <option value="LAPORAN BENGKEL / KURSUS">Laporan Bengkel / Kursus</option>
+                            <option value="LAPORAN PENCAPAIAN">Laporan Pencapaian</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">No. Rujukan (Pilihan)</label>
+                        <input type="text" id="input-ref" oninput="updateReport()" placeholder="Contoh: OPR/2026/04" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tajuk Program / Aktiviti</label>
+                    <input type="text" id="input-title" oninput="updateReport()" placeholder="Contoh: Program Kepimpinan Pemimpin Muda & Jati Diri 2026" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900">
+                </div>
+            </div>
+
+            <!-- Seksyen 3: Butiran Pelaksanaan -->
+            <div class="space-y-4">
+                <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <span class="w-6 h-6 rounded-lg bg-blue-900 text-white text-xs flex items-center justify-center font-bold">3</span>
+                    Butiran Pelaksanaan
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tarikh & Hari</label>
+                        <input type="text" id="input-date" oninput="updateReport()" placeholder="Contoh: 19 November 2026 (Khamis)" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Masa</label>
+                        <input type="text" id="input-time" oninput="updateReport()" placeholder="Contoh: 8.00 Pagi – 4.30 Petang" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tempat / Lokasi</label>
+                    <input type="text" id="input-venue" oninput="updateReport()" placeholder="Contoh: Dewan Bestari & Tapak Perkhemahan" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Kumpulan Sasaran & Kehadiran</label>
+                        <input type="text" id="input-target" oninput="updateReport()" placeholder="Contoh: 120 Orang Pengawas & Ketua Kelas" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Anjuran / Penyelaras</label>
+                        <input type="text" id="input-organizer" oninput="updateReport()" placeholder="Contoh: Unit Bimbingan & Kaunseling" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seksyen 4: Kandungan Laporan -->
+            <div class="space-y-4">
+                <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <span class="w-6 h-6 rounded-lg bg-blue-900 text-white text-xs flex items-center justify-center font-bold">4</span>
+                    Kandungan & Rumusan Laporan
+                </h2>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-semibold text-slate-700">Objektif / Ringkasan Eksekutif</label>
+                        <span class="text-[11px] text-slate-400">Gunakan baris baharu untuk poin</span>
+                    </div>
+                    <textarea id="input-objectives" rows="4" oninput="updateReport()" placeholder="Nyatakan objektif utama atau ringkasan perjalanan program..." class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900 leading-relaxed"></textarea>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-semibold text-slate-700">Impak / Pencapaian / Rumusan</label>
+                        <span class="text-[11px] text-slate-400">Gunakan baris baharu untuk poin</span>
+                    </div>
+                    <textarea id="input-impact" rows="4" oninput="updateReport()" placeholder="Nyatakan keberhasilan, impak kepada peserta, atau cadangan penambahbaikan..." class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900 leading-relaxed"></textarea>
+                </div>
+            </div>
+
+            <!-- Seksyen 5: Muat Naik Gambar Dokumentasi (Maksimum 4) -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-blue-900 text-white text-xs flex items-center justify-center font-bold">5</span>
+                        Gambar Dokumentasi (Maks. 4)
+                    </h2>
+                    <span id="photo-count-badge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">0 / 4 Gambar</span>
+                </div>
+
+                <label id="photo-upload-dropzone" class="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 hover:bg-blue-50/40 hover:border-blue-400 transition cursor-pointer">
+                    <svg class="w-7 h-7 text-blue-800 mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    <span class="text-xs font-bold text-slate-800">Klik untuk Muat Naik Gambar</span>
+                    <span class="text-[11px] text-slate-500 mt-0.5">Boleh pilih sehingga 4 keping gambar serentak (JPG, PNG)</span>
+                    <input type="file" id="input-photos" accept="image/*" multiple class="hidden" onchange="handlePhotosUpload(event)">
+                </label>
+
+                <!-- Senarai Pratonton & Kapsyen Gambar -->
+                <div id="photo-list-editor" class="space-y-2.5"></div>
+            </div>
+
+            <!-- Seksyen 6: Pengesahan & Tandatangan -->
+            <div class="space-y-4 pb-6">
+                <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <span class="w-6 h-6 rounded-lg bg-blue-900 text-white text-xs flex items-center justify-center font-bold">6</span>
+                    Pengesahan Rasmi
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                    <div class="space-y-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Disediakan Oleh</span>
+                        <input type="text" id="input-prep-name" oninput="updateReport()" placeholder="Nama Penuh Pelapor" class="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-900">
+                        <input type="text" id="input-prep-role" oninput="updateReport()" placeholder="Jawatan (cth: Setiausaha Program)" class="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-900">
+                    </div>
+                    <div class="space-y-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Disahkan Oleh</span>
+                        <input type="text" id="input-ver-name" oninput="updateReport()" placeholder="Nama Pegawai Pengesah" class="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-900">
+                        <input type="text" id="input-ver-role" oninput="updateReport()" placeholder="Jawatan (cth: Pengetua / Pengarah)" class="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-900">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANEL KANAN: Pratonton Langsung Dokumen A4 -->
+        <section id="panel-preview" class="hidden lg:flex flex-1 bg-slate-200/80 flex-col overflow-hidden relative">
+            
+            <!-- Bar Kawalan Zoom & Info A4 -->
+            <div class="no-print bg-white/90 backdrop-blur border-b border-slate-200 px-4 py-2 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2 text-slate-600">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="font-semibold">Pratonton Langsung A4</span>
+                    <span class="hidden sm:inline text-slate-400">| 210mm × 297mm (1 Muka Surat)</span>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="adjustZoom(-0.1)" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 cursor-pointer" title="Kecilkan">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                    </button>
+                    <span id="zoom-label" class="w-12 text-center font-bold text-slate-700">Auto</span>
+                    <button type="button" onclick="adjustZoom(0.1)" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 cursor-pointer" title="Besarkan">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    </button>
+                    <button type="button" onclick="resetZoom()" class="ml-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer">
+                        Muat Skrin
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ruang Kanvas Kertas A4 -->
+            <div id="preview-wrapper" class="flex-1 overflow-auto custom-scrollbar p-4 sm:p-8 flex justify-center items-start">
+                <div id="preview-scaler" style="transform-origin: top center;">
+                    <!-- KERTAS A4 SEBENAR -->
+                    <div id="a4-document" class="a4-page text-slate-900">
+                        <!-- Kandungan Template A4 Dijana Secara Dinamik di Sini -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // =========================================================================
+        // 1. KEADAAN APLIKASI (STATE) & KONFIGURASI TEMA
+        // =========================================================================
+        const colorPalettes = {
+            biru: {
+                name: 'Biru Korporat',
+                primary: '#1e3a8a',    // Blue 900
+                secondary: '#1d4ed8',  // Blue 700
+                light: '#eff6ff',      // Blue 50
+                border: '#bfdbfe',     // Blue 200
+                accent: '#d97706'      // Amber 600
+            },
+            zamrud: {
+                name: 'Hijau Zamrud',
+                primary: '#065f46',    // Emerald 800
+                secondary: '#047857',  // Emerald 700
+                light: '#ecfdf5',      // Emerald 50
+                border: '#a7f3d0',     // Emerald 200
+                accent: '#b45309'      // Amber 700
+            },
+            marun: {
+                name: 'Merah Marun',
+                primary: '#881337',    // Rose 900
+                secondary: '#be123c',  // Rose 700
+                light: '#fff1f2',      // Rose 50
+                border: '#fecdd3',     // Rose 200
+                accent: '#b45309'
+            },
+            kelabu: {
+                name: 'Kelabu Eksekutif',
+                primary: '#1e293b',    // Slate 800
+                secondary: '#334155',  // Slate 700
+                light: '#f8fafc',      // Slate 50
+                border: '#cbd5e1',     // Slate 300
+                accent: '#0284c7'      // Sky 600
+            },
+            ungu: {
+                name: 'Ungu Diraja',
+                primary: '#4c1d95',    // Violet 900
+                secondary: '#6d28d9',  // Violet 700
+                light: '#f5f3ff',      // Violet 50
+                border: '#ddd6fe',     // Violet 200
+                accent: '#d97706'
+            }
+        };
+
+        let appState = {
+            template: 'editorial', // 'editorial' | 'infografik' | 'eksekutif_split' | 'klasik' | 'bento'
+            photoFrame: 'bulat',   // 'bulat' | 'tajam' | 'polaroid'
+            photoDisplayMode: 'full_original', // 'full_original' | 'uniform_contain' | 'custom'
+            customPhotoHeight: 135,
+            customPhotoRatio: 'auto',
+            customPhotoFit: 'contain',
+            colorKey: 'biru',
+            logo: '',
+            org: '',
+            suborg: '',
+            category: 'LAPORAN PROGRAM',
+            ref: '',
+            title: '',
+            date: '',
+            time: '',
+            venue: '',
+            target: '',
+            organizer: '',
+            objectives: '',
+            impact: '',
+            photos: [], // Array of { src: string, caption: string }
+            prepName: '',
+            prepRole: '',
+            verName: '',
+            verRole: ''
+        };
+
+        let customZoom = null; // null bermaksud auto-fit
+
+        // =========================================================================
+        // 2. PENJANA SVG GAMBAR CONTOH (PELBAGAI NISBAH: LANDSKAP & POTRET)
+        // =========================================================================
+        function createSampleIllustration(title, bgHex, accentHex, iconType, orientation = 'landscape') {
+            const isPortrait = orientation === 'portrait';
+            const w = isPortrait ? 280 : 420;
+            const h = isPortrait ? 380 : 250;
+            const cx = Math.round(w / 2);
+            const cy = Math.round(h * 0.44);
+
+            const icons = {
+                speech: `<circle cx="${cx}" cy="${cy - 22}" r="24" fill="${accentHex}"/><path d="M${cx - 45} ${cy + 58} C${cx - 45} ${cy + 18}, ${cx + 45} ${cy + 18}, ${cx + 45} ${cy + 58} Z" fill="${accentHex}"/><rect x="${cx - 70}" y="${cy + 58}" width="140" height="52" rx="6" fill="#ffffff" opacity="0.9"/><rect x="${cx - 12}" y="${cy + 13}" width="24" height="45" fill="#cbd5e1"/>`,
+                group: `<circle cx="${cx - 60}" cy="${cy - 8}" r="20" fill="${accentHex}"/><path d="M${cx - 95} ${cy + 62} C${cx - 95} ${cy + 27}, ${cx - 25} ${cy + 27}, ${cx - 25} ${cy + 62} Z" fill="${accentHex}"/><circle cx="${cx + 60}" cy="${cy - 8}" r="20" fill="${accentHex}"/><path d="M${cx + 25} ${cy + 62} C${cx + 25} ${cy + 27}, ${cx + 95} ${cy + 27}, ${cx + 95} ${cy + 62} Z" fill="${accentHex}"/><circle cx="${cx}" cy="${cy - 18}" r="24" fill="#ffffff"/><path d="M${cx - 45} ${cy + 67} C${cx - 45} ${cy + 22}, ${cx + 45} ${cy + 22}, ${cx + 45} ${cy + 67} Z" fill="#ffffff"/>`,
+                workshop: `<rect x="${cx - 105}" y="${cy - 45}" width="210" height="125" rx="10" fill="#ffffff" opacity="0.95"/><rect x="${cx - 82}" y="${cy - 24}" width="90" height="12" rx="4" fill="${bgHex}"/><rect x="${cx - 82}" y="${cy - 2}" width="145" height="8" rx="4" fill="#94a3b8"/><rect x="${cx - 82}" y="${cy + 14}" width="125" height="8" rx="4" fill="#94a3b8"/><circle cx="${cx + 65}" cy="${cy + 32}" r="22" fill="${accentHex}"/>`,
+                award: `<circle cx="${cx}" cy="${cy - 12}" r="42" fill="${accentHex}"/><polygon points="${cx},${cy - 42} ${cx + 9},${cy - 20} ${cx + 32},${cy - 18} ${cx + 14},${cy - 3} ${cx + 19},${cy + 19} ${cx},${cy + 7} ${cx - 19},${cy + 19} ${cx - 14},${cy - 3} ${cx - 32},${cy - 18} ${cx - 9},${cy - 20}" fill="#ffffff"/><path d="M${cx - 26} ${cy + 26} L${cx - 42} ${cy + 80} L${cx - 15} ${cy + 66} L${cx} ${cy + 80} L${cx} ${cy + 30} Z" fill="#ffffff" opacity="0.9"/><path d="M${cx + 26} ${cy + 26} L${cx + 42} ${cy + 80} L${cx + 15} ${cy + 66} L${cx} ${cy + 80} L${cx} ${cy + 30} Z" fill="#ffffff" opacity="0.8"/>`
+            };
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+                <defs>
+                    <linearGradient id="g_${iconType}_${orientation}" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="${bgHex}"/>
+                        <stop offset="100%" stop-color="#0f172a"/>
+                    </linearGradient>
+                </defs>
+                <rect width="${w}" height="${h}" fill="url(#g_${iconType}_${orientation})"/>
+                <rect x="10" y="10" width="${w - 20}" height="${h - 20}" rx="8" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="2" stroke-dasharray="6 4"/>
+                <text x="${cx}" y="30" font-family="sans-serif" font-size="10" font-weight="bold" fill="#ffffff" opacity="0.75" text-anchor="middle">${isPortrait ? 'FORMAT POTRET (3:4) • 100% PENUH' : 'FORMAT LANDSKAP (16:10) • 100% PENUH'}</text>
+                ${icons[iconType] || icons.speech}
+                <rect x="0" y="${h - 40}" width="${w}" height="40" fill="#000000" opacity="0.5"/>
+                <text x="${cx}" y="${h - 15}" font-family="sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">${title}</text>
+            </svg>`;
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }
+
+        function createSampleLogo() {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+                <path d="M60 8 L106 26 V62 C106 89 86 107 60 114 C34 107 14 89 14 62 V26 Z" fill="#1e3a8a" stroke="#d97706" stroke-width="5"/>
+                <circle cx="60" cy="54" r="20" fill="#ffffff"/>
+                <path d="M36 86 Q60 72 84 86" stroke="#d97706" stroke-width="5" fill="none" stroke-linecap="round"/>
+                <text x="60" y="59" font-family="serif" font-size="16" font-weight="bold" fill="#1e3a8a" text-anchor="middle">OPR</text>
+            </svg>`;
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }
+
+        // =========================================================================
+        // 3. FUNGSI KAWALAN INPUT & MUAT NAIK FAIL
+        // =========================================================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                info: 'bg-slate-900 text-white',
+                success: 'bg-emerald-700 text-white',
+                warning: 'bg-amber-600 text-white',
+                error: 'bg-rose-700 text-white'
+            };
+            toast.className = `${colors[type] || colors.info} px-4 py-3 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                appState.logo = e.target.result;
+                updateLogoUI();
+                renderDocument();
+                showToast('Logo organisasi berjaya dimuat naik.', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeLogo() {
+            appState.logo = '';
+            document.getElementById('input-logo').value = '';
+            updateLogoUI();
+            renderDocument();
+        }
+
+        function updateLogoUI() {
+            const img = document.getElementById('logo-thumb-img');
+            const icon = document.getElementById('logo-placeholder-icon');
+            const btnRemove = document.getElementById('btn-remove-logo');
+            if (appState.logo) {
+                img.src = appState.logo;
+                img.classList.remove('hidden');
+                icon.classList.add('hidden');
+                btnRemove.classList.remove('hidden');
+            } else {
+                img.src = '';
+                img.classList.add('hidden');
+                icon.classList.remove('hidden');
+                btnRemove.classList.add('hidden');
+            }
+        }
+
+        function handlePhotosUpload(event) {
+            const files = Array.from(event.target.files);
+            if (!files.length) return;
+
+            const remainingSlots = 4 - appState.photos.length;
+            if (remainingSlots <= 0) {
+                showToast('Had maksimum 4 keping gambar telah dicapai.', 'warning');
+                event.target.value = '';
+                return;
+            }
+
+            const filesToProcess = files.slice(0, remainingSlots);
+            if (files.length > remainingSlots) {
+                showToast(`Hanya ${remainingSlots} gambar pertama ditambah (had 4 gambar).`, 'warning');
+            }
+
+            let processed = 0;
+            filesToProcess.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    appState.photos.push({
+                        src: e.target.result,
+                        caption: `Gambar ${appState.photos.length + 1}: Aktiviti sepanjang program berlangsung.`
+                    });
+                    processed++;
+                    if (processed === filesToProcess.length) {
+                        renderPhotoEditorList();
+                        renderDocument();
+                        showToast(`${processed} gambar berjaya dimuat naik.`, 'success');
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+            event.target.value = '';
+        }
+
+        function updatePhotoCaption(index, value) {
+            if (appState.photos[index]) {
+                appState.photos[index].caption = value;
+                renderDocument();
+            }
+        }
+
+        function removePhoto(index) {
+            appState.photos.splice(index, 1);
+            renderPhotoEditorList();
+            renderDocument();
+        }
+
+        function renderPhotoEditorList() {
+            const listEl = document.getElementById('photo-list-editor');
+            const badgeEl = document.getElementById('photo-count-badge');
+            badgeEl.textContent = `${appState.photos.length} / 4 Gambar`;
+
+            if (appState.photos.length === 0) {
+                listEl.innerHTML = '';
+                return;
+            }
+
+            listEl.innerHTML = appState.photos.map((photo, index) => `
+                <div class="flex items-start gap-2.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <img src="${photo.src}" alt="Gambar ${index + 1}" class="w-16 h-14 object-cover rounded-lg border border-slate-300 flex-shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[11px] font-bold text-slate-700">Kapsyen Gambar #${index + 1}</span>
+                            <button type="button" onclick="removePhoto(${index})" class="text-[11px] font-semibold text-rose-600 hover:underline cursor-pointer">Padam</button>
+                        </div>
+                        <input type="text" value="${escapeHtml(photo.caption)}" oninput="updatePhotoCaption(${index}, this.value)" placeholder="Masukkan keterangan gambar..." class="w-full px-2.5 py-1 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-900">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setTemplate(tplKey) {
+            appState.template = tplKey;
+            document.querySelectorAll('.tpl-btn').forEach(btn => {
+                btn.classList.remove('border-blue-900', 'bg-blue-50/60');
+                btn.classList.add('border-slate-200', 'bg-white');
+                const dot = btn.querySelector('.tpl-dot');
+                if (dot) dot.classList.replace('bg-blue-900', 'bg-transparent');
+            });
+
+            const activeBtn = document.getElementById(`tpl-btn-${tplKey}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-slate-200', 'bg-white');
+                activeBtn.classList.add('border-blue-900', 'bg-blue-50/60');
+                const dot = activeBtn.querySelector('.tpl-dot');
+                if (dot) dot.classList.replace('bg-transparent', 'bg-blue-900');
+            }
+            renderDocument();
+        }
+
+        function setPhotoFrame(frameKey) {
+            appState.photoFrame = frameKey;
+            document.querySelectorAll('.frame-btn').forEach(btn => {
+                if (btn.dataset.frame === frameKey) {
+                    btn.classList.remove('border', 'border-slate-200', 'text-slate-700', 'font-semibold');
+                    btn.classList.add('border-2', 'border-blue-900', 'text-slate-900', 'font-bold');
+                } else {
+                    btn.classList.remove('border-2', 'border-blue-900', 'text-slate-900', 'font-bold');
+                    btn.classList.add('border', 'border-slate-200', 'text-slate-700', 'font-semibold');
+                }
+            });
+            renderDocument();
+        }
+
+        function setPhotoDisplayMode(modeKey) {
+            appState.photoDisplayMode = modeKey;
+            document.querySelectorAll('.pmode-btn').forEach(btn => {
+                const isSelected = btn.dataset.pmode === modeKey;
+                const titleEl = btn.querySelector('span:first-child');
+                const dotEl = btn.querySelector('.pmode-dot');
+                if (isSelected) {
+                    btn.classList.remove('border', 'border-slate-200', 'hover:bg-slate-50');
+                    btn.classList.add('border-2', 'border-blue-900', 'bg-blue-50/40');
+                    if (titleEl) {
+                        titleEl.classList.remove('font-semibold', 'text-slate-800');
+                        titleEl.classList.add('font-bold', 'text-slate-900');
+                    }
+                    if (dotEl) dotEl.classList.replace('bg-transparent', 'bg-blue-900');
+                } else {
+                    btn.classList.remove('border-2', 'border-blue-900', 'bg-blue-50/40');
+                    btn.classList.add('border', 'border-slate-200', 'hover:bg-slate-50');
+                    if (titleEl) {
+                        titleEl.classList.remove('font-bold', 'text-slate-900');
+                        titleEl.classList.add('font-semibold', 'text-slate-800');
+                    }
+                    if (dotEl) dotEl.classList.replace('bg-blue-900', 'bg-transparent');
+                }
+            });
+
+            const customPanel = document.getElementById('custom-photo-controls');
+            if (customPanel) {
+                if (modeKey === 'custom') {
+                    customPanel.classList.remove('hidden');
+                } else {
+                    customPanel.classList.add('hidden');
+                }
+            }
+            renderDocument();
+        }
+
+        function updateCustomPhotoSettings() {
+            const heightInput = document.getElementById('input-photo-height');
+            const ratioInput = document.getElementById('input-photo-ratio');
+            const fitInput = document.getElementById('input-photo-fit');
+            const heightLabel = document.getElementById('custom-height-label');
+
+            if (heightInput) {
+                appState.customPhotoHeight = parseInt(heightInput.value, 10) || 135;
+                if (heightLabel) heightLabel.textContent = `${appState.customPhotoHeight}px`;
+            }
+            if (ratioInput) appState.customPhotoRatio = ratioInput.value;
+            if (fitInput) appState.customPhotoFit = fitInput.value;
+            renderDocument();
+        }
+
+        function setThemeColor(colorKey) {
+            appState.colorKey = colorKey;
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                if (btn.dataset.color === colorKey) {
+                    btn.classList.remove('border', 'border-slate-200', 'text-slate-700');
+                    btn.classList.add('border-2', 'border-blue-900', 'text-slate-900', 'shadow-sm');
+                } else {
+                    btn.classList.remove('border-2', 'border-blue-900', 'text-slate-900', 'shadow-sm');
+                    btn.classList.add('border', 'border-slate-200', 'text-slate-700');
+                }
+            });
+            renderDocument();
+        }
+
+        function updateReport() {
+            appState.org = document.getElementById('input-org').value;
+            appState.suborg = document.getElementById('input-suborg').value;
+            appState.category = document.getElementById('input-category').value;
+            appState.ref = document.getElementById('input-ref').value;
+            appState.title = document.getElementById('input-title').value;
+            appState.date = document.getElementById('input-date').value;
+            appState.time = document.getElementById('input-time').value;
+            appState.venue = document.getElementById('input-venue').value;
+            appState.target = document.getElementById('input-target').value;
+            appState.organizer = document.getElementById('input-organizer').value;
+            appState.objectives = document.getElementById('input-objectives').value;
+            appState.impact = document.getElementById('input-impact').value;
+            appState.prepName = document.getElementById('input-prep-name').value;
+            appState.prepRole = document.getElementById('input-prep-role').value;
+            appState.verName = document.getElementById('input-ver-name').value;
+            appState.verRole = document.getElementById('input-ver-role').value;
+            renderDocument();
+        }
+
+        function syncInputsFromState() {
+            document.getElementById('input-org').value = appState.org;
+            document.getElementById('input-suborg').value = appState.suborg;
+            document.getElementById('input-category').value = appState.category;
+            document.getElementById('input-ref').value = appState.ref;
+            document.getElementById('input-title').value = appState.title;
+            document.getElementById('input-date').value = appState.date;
+            document.getElementById('input-time').value = appState.time;
+            document.getElementById('input-venue').value = appState.venue;
+            document.getElementById('input-target').value = appState.target;
+            document.getElementById('input-organizer').value = appState.organizer;
+            document.getElementById('input-objectives').value = appState.objectives;
+            document.getElementById('input-impact').value = appState.impact;
+            document.getElementById('input-prep-name').value = appState.prepName;
+            document.getElementById('input-prep-role').value = appState.prepRole;
+            document.getElementById('input-ver-name').value = appState.verName;
+            document.getElementById('input-ver-role').value = appState.verRole;
+            updateLogoUI();
+            renderPhotoEditorList();
+        }
+
+        function loadSampleData() {
+            appState = {
+                ...appState,
+                logo: createSampleLogo(),
+                org: 'SEKOLAH MENENGAH KEBANGSAAN SERI PERDANA',
+                suborg: 'Unit Hal Ehwal Murid & Lembaga Pengawas Sekolah',
+                category: 'LAPORAN PROGRAM',
+                ref: 'OPR/HEM/2026/08',
+                title: 'KURSUS KEPIMPINAN PEMIMPIN MUDA & JATI DIRI MADANI 2026',
+                date: '19 November 2026 (Khamis)',
+                time: '8.00 Pagi – 4.30 Petang',
+                venue: 'Dewan Seri Perdana & Laman Wawasan',
+                target: '145 Orang Pemimpin Pelajar (Pengawas, PSS & Ketua Kelas)',
+                organizer: 'Unit Bimbingan & Kaunseling dengan kerjasama PIBG',
+                objectives: '• Membentuk sahsiah, disiplin dan kemahiran komunikasi berkesan dalam kalangan pemimpin pelajar.\n• Memupuk semangat kerja berpasukan serta keupayaan membuat keputusan secara rasional.\n• Memperkasakan peranan pemimpin muda sebagai suri teladan kepada seluruh warga sekolah.',
+                impact: '• 100% peserta berjaya menamatkan kesemua 4 modul latihan dalam kumpulan (LDK) dengan cemerlang.\n• Peningkatan ketara dari segi keyakinan pengucapan awam dan pengurusan perhimpunan rasmi.\n• Pelan tindakan tahunan badan kepimpinan murid 2026/2027 berjaya dirangka dan dibentangkan.',
+                photos: [
+                    {
+                        src: createSampleIllustration('Ucapan Perasmian Pengetua', '#1e3a8a', '#d97706', 'speech', 'landscape'),
+                        caption: 'Ucapan perasmian oleh Tuan Pengetua di Dewan Seri Perdana.'
+                    },
+                    {
+                        src: createSampleIllustration('Poster & Modul LDK', '#065f46', '#f59e0b', 'workshop', 'portrait'),
+                        caption: 'Sesi pembentangan pelan tindakan (format potret penuh).'
+                    },
+                    {
+                        src: createSampleIllustration('Sesi Bergambar Pemimpin', '#1e293b', '#38bdf8', 'group', 'landscape'),
+                        caption: 'Sesi bergambar kenangan bersama barisan pentadbir.'
+                    },
+                    {
+                        src: createSampleIllustration('Anugerah Kumpulan Terbaik', '#881337', '#fbbf24', 'award', 'portrait'),
+                        caption: 'Penyampaian sijil dan anugerah (format potret penuh).'
+                    }
+                ],
+                prepName: 'PN. NURUL AIN BINTI AHMAD ZAKI',
+                prepRole: 'Setiausaha Program Kepimpinan',
+                verName: 'TN. HJ. MOHD HAFIZ BIN ABDUL RAHMAN',
+                verRole: 'Pengetua SMK Seri Perdana'
+            };
+            syncInputsFromState();
+            renderDocument();
+            showToast('Contoh data rasmi dan 4 gambar telah dimuatkan.', 'success');
+        }
+
+        function resetForm() {
+            appState = {
+                ...appState,
+                logo: '',
+                org: '',
+                suborg: '',
+                category: 'LAPORAN PROGRAM',
+                ref: '',
+                title: '',
+                date: '',
+                time: '',
+                venue: '',
+                target: '',
+                organizer: '',
+                objectives: '',
+                impact: '',
+                photos: [],
+                prepName: '',
+                prepRole: '',
+                verName: '',
+                verRole: ''
+            };
+            syncInputsFromState();
+            renderDocument();
+            showToast('Semua maklumat borang telah dikosongkan.', 'info');
+        }
+
+        // =========================================================================
+        // 4. PEMBANTU FORMAT TEKS, HIASAN SVG & GALERI FOTO PINTAR (SMART COLLAGE)
+        // =========================================================================
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatMultilineText(text, fallbackText, compact = false) {
+            const raw = (text || '').trim();
+            if (!raw) {
+                return `<p class="text-[10.5px] text-slate-400 italic">${fallbackText}</p>`;
+            }
+            const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+            const textSize = compact ? 'text-[10px] leading-[1.38]' : 'text-[10.5px] leading-[1.42]';
+            return lines.map(line => {
+                const cleanLine = line.replace(/^[•\-\*]\s*/, '');
+                const isBullet = /^[•\-\*]/.test(line) || lines.length > 1;
+                if (isBullet) {
+                    return `<div class="flex items-start gap-1.5 ${textSize} text-slate-800 mb-1">
+                        <span class="font-extrabold mt-[0.5px]" style="color: var(--p-primary)">▸</span>
+                        <span>${escapeHtml(cleanLine)}</span>
+                    </div>`;
+                }
+                return `<p class="${textSize} text-slate-800 mb-1">${escapeHtml(cleanLine)}</p>`;
+            }).join('');
+        }
+
+        function getHighlightQuote(impactText) {
+            const raw = (impactText || '').trim();
+            if (!raw) return 'Pelaksanaan program berjaya mencapai objektif dan memberi impak positif kepada semua peserta.';
+            const firstLine = raw.split('\n').map(l => l.trim()).filter(Boolean)[0] || '';
+            return firstLine.replace(/^[•\-\*]\s*/, '');
+        }
+
+        function getFrameClasses(frameType) {
+            if (frameType === 'tajam') {
+                return {
+                    wrapper: 'rounded-none border border-slate-400 bg-white p-1',
+                    imgRadius: 'rounded-none',
+                    captionClass: 'text-[9px] text-slate-700 font-medium pt-1 text-center'
+                };
+            }
+            if (frameType === 'polaroid') {
+                return {
+                    wrapper: 'rounded-sm border border-slate-200 bg-white p-1.5 pb-2 shadow-sm',
+                    imgRadius: 'rounded-xs border border-slate-100',
+                    captionClass: 'font-serif-formal italic text-[8.8px] text-slate-700 pt-1.5 text-center'
+                };
+            }
+            // Default: 'bulat' (Sudut Bulat Moden)
+            return {
+                wrapper: 'rounded-xl overflow-hidden border border-slate-200/90 bg-slate-50/70 p-1',
+                imgRadius: 'rounded-lg',
+                captionClass: 'text-[9px] text-slate-600 font-semibold pt-1 px-1 text-center'
+            };
+        }
+
+        function renderSmartPhotoCollage(photos, options = {}) {
+            const { layoutMode = 'standard', maxHeight = 225 } = options;
+            const count = photos.length;
+            const fc = getFrameClasses(appState.photoFrame);
+            const displayMode = appState.photoDisplayMode || 'full_original';
+
+            if (count === 0) {
+                return `
+                    <div class="w-full border border-dashed border-slate-300 rounded-xl bg-slate-50/70 flex flex-col items-center justify-center p-4 text-center" style="height: ${maxHeight}px;">
+                        <svg class="w-7 h-7 text-slate-300 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-[10.5px] font-bold text-slate-400">Ruangan Kolaj Gambar Pintar (1 – 4 Gambar)</p>
+                        <p class="text-[9.5px] text-slate-400">Setiap gambar akan dipaparkan 100% penuh mengikut nisbah asal tanpa terpotong.</p>
+                    </div>
+                `;
+            }
+
+            // Penjana kad gambar tunggal mengikut ketetapan paparan (Tanpa Potong / Seragam / Tersuai)
+            const renderPhotoCard = (photo, idx, slotMaxHeight, extraCardClass = '') => {
+                let containerStyle = '';
+                let imgClass = 'w-full h-full object-contain';
+                let imgInlineStyle = '';
+
+                if (displayMode === 'full_original') {
+                    // Saiz Penuh Asal (Tanpa Potong): tinggi berkadar terus dengan nisbah asal gambar, dihadkan oleh slotMaxHeight supaya muat 1 muka surat A4
+                    containerStyle = `max-height: ${slotMaxHeight}px; min-height: 56px;`;
+                    imgClass = 'w-auto h-auto max-w-full object-contain mx-auto block';
+                    imgInlineStyle = `max-height: ${slotMaxHeight}px;`;
+                } else if (displayMode === 'uniform_contain') {
+                    // Ketinggian Tetap Seragam (Penuh): bingkai seragam dengan object-contain agar gambar tidak terpotong
+                    containerStyle = `height: ${slotMaxHeight}px;`;
+                    imgClass = 'w-full h-full object-contain mx-auto block';
+                } else {
+                    // Ketetapan Saiz Tersuai (Tinggi Maksimum, Nisbah Bingkai & Mod Fit)
+                    const userMaxH = Math.min(slotMaxHeight + 25, appState.customPhotoHeight || 135);
+                    const fitClass = appState.customPhotoFit === 'cover' ? 'object-cover' : 'object-contain';
+                    if (appState.customPhotoRatio && appState.customPhotoRatio !== 'auto') {
+                        containerStyle = `aspect-ratio: ${appState.customPhotoRatio}; max-height: ${userMaxH}px; width: 100%;`;
+                        imgClass = `w-full h-full ${fitClass} mx-auto block`;
+                    } else {
+                        if (appState.customPhotoFit === 'cover') {
+                            containerStyle = `height: ${userMaxH}px; width: 100%;`;
+                            imgClass = 'w-full h-full object-cover mx-auto block';
+                        } else {
+                            containerStyle = `max-height: ${userMaxH}px; min-height: 52px;`;
+                            imgClass = 'w-auto h-auto max-w-full object-contain mx-auto block';
+                            imgInlineStyle = `max-height: ${userMaxH}px;`;
+                        }
+                    }
+                }
+
+                return `
+                    <div class="${fc.wrapper} ${extraCardClass} flex flex-col justify-between overflow-hidden">
+                        <div class="w-full overflow-hidden bg-[#f8fafc] relative flex items-center justify-center ${fc.imgRadius}" style="${containerStyle}">
+                            <img src="${photo.src}" alt="Dokumentasi ${idx + 1}" class="${imgClass}" style="${imgInlineStyle}">
+                            <span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[8px] font-extrabold text-white shadow-xs" style="background-color: var(--p-primary)">0${idx + 1}</span>
+                        </div>
+                        <p class="${fc.captionClass} line-clamp-1 leading-tight">
+                            ${escapeHtml(photo.caption || `Gambar Dokumentasi ${idx + 1}`)}
+                        </p>
+                    </div>
+                `;
+            };
+
+            // 1 Gambar: Paparan Wira Penuh tanpa terpotong
+            if (count === 1) {
+                return `
+                    <div class="w-full">
+                        ${renderPhotoCard(photos[0], 0, maxHeight - 26)}
+                    </div>
+                `;
+            }
+
+            // 2 Gambar: Beriringan atau Bertingkat mengikut mod
+            if (count === 2) {
+                if (layoutMode === 'vertical-stack') {
+                    const eachH = Math.floor((maxHeight - 8) / 2) - 24;
+                    return `
+                        <div class="grid grid-cols-1 gap-2 items-center">
+                            ${photos.map((p, i) => renderPhotoCard(p, i, eachH)).join('')}
+                        </div>
+                    `;
+                }
+                return `
+                    <div class="grid grid-cols-2 gap-2.5 items-stretch">
+                        ${photos.map((p, i) => renderPhotoCard(p, i, maxHeight - 26)).join('')}
+                    </div>
+                `;
+            }
+
+            // 3 Gambar: Gaya Majalah (1 Besar di Kiri + 2 Kecil Bertingkat di Kanan)
+            if (count === 3) {
+                const bigH = maxHeight - 26;
+                const smallH = Math.floor((maxHeight - 8) / 2) - 24;
+                return `
+                    <div class="grid grid-cols-12 gap-2.5 items-stretch">
+                        <div class="col-span-7 flex flex-col">
+                            ${renderPhotoCard(photos[0], 0, bigH, 'flex-1')}
+                        </div>
+                        <div class="col-span-5 flex flex-col gap-2 justify-between">
+                            ${renderPhotoCard(photos[1], 1, smallH)}
+                            ${renderPhotoCard(photos[2], 2, smallH)}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 4 Gambar: Grid 2x2 Seimbang atau Gaya Editorial Asimetri
+            const cellH = Math.floor((maxHeight - 8) / 2) - 24;
+            if (layoutMode === 'editorial-asymmetric') {
+                return `
+                    <div class="grid grid-cols-12 gap-2 items-stretch">
+                        <div class="col-span-6 flex flex-col">${renderPhotoCard(photos[0], 0, cellH, 'flex-1')}</div>
+                        <div class="col-span-6 flex flex-col">${renderPhotoCard(photos[1], 1, cellH, 'flex-1')}</div>
+                        <div class="col-span-6 flex flex-col">${renderPhotoCard(photos[2], 2, cellH, 'flex-1')}</div>
+                        <div class="col-span-6 flex flex-col">${renderPhotoCard(photos[3], 3, cellH, 'flex-1')}</div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="grid grid-cols-2 gap-2 items-stretch">
+                    ${photos.map((p, i) => renderPhotoCard(p, i, cellH)).join('')}
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // 5. ENJIN PENJANA 5 REKABENTUK LAPORAN RASMI KREATIF & DINAMIK (A4)
+        // =========================================================================
+        function renderDocument() {
+            const docEl = document.getElementById('a4-document');
+            const pal = colorPalettes[appState.colorKey] || colorPalettes.biru;
+
+            docEl.style.setProperty('--p-primary', pal.primary);
+            docEl.style.setProperty('--p-secondary', pal.secondary);
+            docEl.style.setProperty('--p-light', pal.light);
+            docEl.style.setProperty('--p-border', pal.border);
+            docEl.style.setProperty('--p-accent', pal.accent);
+
+            const d = {
+                org: escapeHtml(appState.org || 'NAMA ORGANISASI / JABATAN / SEKOLAH'),
+                suborg: escapeHtml(appState.suborg || 'Unit / Bahagian Pelaksana'),
+                category: escapeHtml(appState.category || 'LAPORAN PROGRAM'),
+                ref: escapeHtml(appState.ref),
+                title: escapeHtml(appState.title || 'TAJUK PROGRAM / AKTIVITI RASMI'),
+                date: escapeHtml(appState.date || '—'),
+                time: escapeHtml(appState.time || '—'),
+                venue: escapeHtml(appState.venue || '—'),
+                target: escapeHtml(appState.target || '—'),
+                organizer: escapeHtml(appState.organizer || '—'),
+                objectivesHtml: formatMultilineText(appState.objectives, 'Objektif atau ringkasan pelaksanaan program akan dipaparkan di ruangan ini.'),
+                impactHtml: formatMultilineText(appState.impact, 'Impak, pencapaian utama dan rumusan program akan dipaparkan di ruangan ini.'),
+                objectivesCompactHtml: formatMultilineText(appState.objectives, 'Objektif pelaksanaan program.', true),
+                impactCompactHtml: formatMultilineText(appState.impact, 'Impak dan pencapaian program.', true),
+                highlightQuote: escapeHtml(getHighlightQuote(appState.impact)),
+                prepName: escapeHtml(appState.prepName || '......................................................'),
+                prepRole: escapeHtml(appState.prepRole || 'Pelapor / Setiausaha Program'),
+                verName: escapeHtml(appState.verName || '......................................................'),
+                verRole: escapeHtml(appState.verRole || 'Ketua Jabatan / Pengetua / Pengarah')
+            };
+
+            const logoHtml = appState.logo
+                ? `<img src="${appState.logo}" alt="Logo" class="w-13 h-13 object-contain flex-shrink-0">`
+                : `<div class="w-12 h-12 rounded-lg border border-dashed border-slate-300 flex items-center justify-center text-[8.5px] text-slate-400 font-bold text-center p-1 flex-shrink-0">LOGO</div>`;
+
+            // ---------------------------------------------------------------------
+            // TEMPLAT 1: EDITORIAL MAJALAH RASMI (CREATIVE EDITORIAL)
+            // ---------------------------------------------------------------------
+            if (appState.template === 'editorial') {
+                docEl.innerHTML = `
+                    <div class="w-full h-full flex flex-col justify-between p-[10mm] bg-white relative overflow-hidden">
+                        <!-- Hiasan Geometri Vektor Sudut Atas -->
+                        <svg class="absolute top-0 right-0 w-64 h-64 pointer-events-none opacity-[0.07]" viewBox="0 0 200 200">
+                            <circle cx="160" cy="40" r="120" fill="${pal.primary}"/>
+                            <circle cx="190" cy="90" r="80" fill="${pal.accent}"/>
+                        </svg>
+
+                        <div>
+                            <!-- Masthead Majalah Rasmi -->
+                            <div class="flex items-center justify-between gap-4 pb-2.5 border-b-2" style="border-color: ${pal.primary}">
+                                <div class="flex items-center gap-3">
+                                    ${logoHtml}
+                                    <div>
+                                        <p class="text-[11.5px] font-extrabold uppercase tracking-wider leading-tight" style="color: ${pal.primary}">${d.org}</p>
+                                        <p class="text-[10px] font-medium text-slate-500">${d.suborg}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="inline-block px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-white rounded-xs" style="background-color: ${pal.accent}">
+                                        ${d.category}
+                                    </span>
+                                    <p class="font-serif-formal italic text-[10px] text-slate-500 mt-0.5">Edisi Pelaporan Rasmi ${d.ref ? `• ${d.ref}` : ''}</p>
+                                </div>
+                            </div>
+
+                            <!-- Tajuk Utama Editorial Serif + Sans -->
+                            <div class="my-3">
+                                <h1 class="font-serif-formal text-[17px] font-black text-slate-900 leading-[1.25] tracking-tight">
+                                    ${d.title}
+                                </h1>
+                                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[9.5px] font-semibold text-slate-600 py-1.5 px-3 rounded-lg" style="background-color: ${pal.light}">
+                                    <span><strong style="color: ${pal.primary}">TARIKH:</strong> ${d.date}</span>
+                                    <span>•</span>
+                                    <span><strong style="color: ${pal.primary}">MASA:</strong> ${d.time}</span>
+                                    <span>•</span>
+                                    <span><strong style="color: ${pal.primary}">LOKASI:</strong> ${d.venue}</span>
+                                </div>
+                            </div>
+
+                            <!-- Reka Letak Asimetri 2 Kolum (Kiri 5 Lajur Naratif + Kanan 7 Lajur Kolaj) -->
+                            <div class="grid grid-cols-12 gap-4 items-start">
+                                <!-- Lajur Kiri: Naratif & Petikan Tumpuan -->
+                                <div class="col-span-5 space-y-2.5">
+                                    <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 text-[9.5px] space-y-1">
+                                        <div><span class="font-bold text-slate-500 uppercase block text-[8px]">Kumpulan Sasaran</span><span class="font-bold text-slate-800">${d.target}</span></div>
+                                        <div class="pt-1 border-t border-slate-200/70"><span class="font-bold text-slate-500 uppercase block text-[8px]">Anjuran / Penyelaras</span><span class="font-bold text-slate-800">${d.organizer}</span></div>
+                                    </div>
+
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-[15px] font-black leading-none" style="color: ${pal.primary}">01</span>
+                                            <h3 class="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-900">Objektif & Pelaksanaan</h3>
+                                        </div>
+                                        ${d.objectivesCompactHtml}
+                                    </div>
+
+                                    <!-- Petikan Tumpuan (Pull Quote) -->
+                                    <div class="p-2.5 rounded-r-xl border-l-4" style="background-color: ${pal.light}; border-color: ${pal.accent}">
+                                        <p class="text-[8.5px] font-extrabold uppercase tracking-widest mb-0.5" style="color: ${pal.accent}">Sorotan Utama</p>
+                                        <p class="font-serif-formal italic text-[10px] font-bold text-slate-800 leading-snug">
+                                            “${d.highlightQuote}”
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-[15px] font-black leading-none" style="color: ${pal.secondary}">02</span>
+                                            <h3 class="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-900">Impak & Rumusan</h3>
+                                        </div>
+                                        ${d.impactCompactHtml}
+                                    </div>
+                                </div>
+
+                                <!-- Lajur Kanan: Kolaj Dokumentasi Visual -->
+                                <div class="col-span-7">
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-[10px] font-extrabold uppercase tracking-widest" style="color: ${pal.primary}">03 • Lensa Dokumentasi</span>
+                                        <span class="h-[1.5px] flex-1 ml-2" style="background-color: ${pal.border}"></span>
+                                    </div>
+                                    ${renderSmartPhotoCollage(appState.photos, { layoutMode: 'editorial-asymmetric', maxHeight: 335 })}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Pengesahan Editorial -->
+                        <div class="pt-2 border-t border-slate-300 grid grid-cols-2 gap-8 text-[9.5px]">
+                            <div class="flex items-end justify-between border-b border-slate-300 pb-1">
+                                <div>
+                                    <span class="text-[8.5px] font-bold uppercase tracking-wider text-slate-400 block mb-4">Disediakan Oleh</span>
+                                    <p class="font-extrabold text-slate-900 uppercase">${d.prepName}</p>
+                                    <p class="text-slate-500">${d.prepRole}</p>
+                                </div>
+                                <span class="text-[8.5px] text-slate-400 italic">Tandatangan & Cop</span>
+                            </div>
+                            <div class="flex items-end justify-between border-b border-slate-300 pb-1">
+                                <div>
+                                    <span class="text-[8.5px] font-bold uppercase tracking-wider text-slate-400 block mb-4">Disahkan Oleh</span>
+                                    <p class="font-extrabold text-slate-900 uppercase">${d.verName}</p>
+                                    <p class="text-slate-500">${d.verRole}</p>
+                                </div>
+                                <span class="text-[8.5px] text-slate-400 italic">Tandatangan & Cop</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ---------------------------------------------------------------------
+            // TEMPLAT 2: INFOGRAFIK MODEN (DYNAMIC INFOGRAPHIC)
+            // ---------------------------------------------------------------------
+            else if (appState.template === 'infografik') {
+                docEl.innerHTML = `
+                    <div class="w-full h-full flex flex-col justify-between bg-white relative overflow-hidden">
+                        <div>
+                            <!-- Sepanduk Kepala Geometri Berlapis -->
+                            <div class="relative px-[10mm] pt-4 pb-6 text-white overflow-hidden" style="background: linear-gradient(125deg, ${pal.primary} 0%, ${pal.secondary} 100%);">
+                                <!-- Corak Vektor Gelombang & Geometri -->
+                                <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-15" preserveAspectRatio="none" viewBox="0 0 800 200">
+                                    <polygon points="550,0 800,0 800,200 450,200" fill="#ffffff"/>
+                                    <circle cx="720" cy="40" r="95" fill="${pal.accent}"/>
+                                </svg>
+                                <div class="relative z-10 flex items-center justify-between gap-4">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="bg-white p-1.5 rounded-xl shadow-md">
+                                            ${logoHtml}
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="px-2.5 py-0.5 rounded-full text-[8.5px] font-extrabold uppercase tracking-wider text-slate-900 bg-white">
+                                                    ${d.category}
+                                                </span>
+                                                ${d.ref ? `<span class="text-[9.5px] font-mono text-white/90">Ruj: ${d.ref}</span>` : ''}
+                                            </div>
+                                            <h2 class="text-[12.5px] font-extrabold uppercase tracking-wide leading-tight">${d.org}</h2>
+                                            <p class="text-[10px] text-white/85">${d.suborg}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right flex-shrink-0">
+                                        <div class="px-3 py-1.5 rounded-xl bg-white/15 backdrop-blur-xs border border-white/25">
+                                            <span class="block text-[15px] font-black leading-none tracking-tight">OPR</span>
+                                            <span class="block text-[8px] uppercase tracking-widest text-white/85 mt-0.5">Infografik</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kad Tajuk Terapung (Overlapping Title Card) -->
+                            <div class="px-[10mm] -mt-3.5 relative z-20">
+                                <div class="bg-white rounded-xl shadow-sm border-l-4 border border-slate-200 px-4 py-2.5" style="border-left-color: ${pal.accent}">
+                                    <p class="text-[8.5px] font-extrabold uppercase tracking-widest" style="color: ${pal.primary}">Tajuk Laporan Program / Aktiviti</p>
+                                    <h1 class="text-[14.5px] font-black text-slate-900 uppercase leading-snug mt-0.5">${d.title}</h1>
+                                </div>
+                            </div>
+
+                            <!-- Badan Infografik -->
+                            <div class="px-[10mm] pt-3 space-y-2.5">
+                                <!-- 4 Lencana Metrik Berikon -->
+                                <div class="grid grid-cols-4 gap-2 text-[9.5px]">
+                                    <div class="p-2 rounded-xl border flex items-start gap-2" style="background-color: ${pal.light}; border-color: ${pal.border}">
+                                        <div class="w-6 h-6 rounded-lg flex items-center justify-center text-white flex-shrink-0 mt-0.5" style="background-color: ${pal.primary}">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <span class="text-[8px] font-extrabold uppercase text-slate-500 block">Tarikh & Masa</span>
+                                            <span class="font-bold text-slate-900 block leading-tight">${d.date}</span>
+                                            <span class="text-[8.5px] text-slate-600 block">${d.time}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-2 rounded-xl border flex items-start gap-2" style="background-color: ${pal.light}; border-color: ${pal.border}">
+                                        <div class="w-6 h-6 rounded-lg flex items-center justify-center text-white flex-shrink-0 mt-0.5" style="background-color: ${pal.secondary}">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <span class="text-[8px] font-extrabold uppercase text-slate-500 block">Lokasi</span>
+                                            <span class="font-bold text-slate-900 block leading-tight line-clamp-2">${d.venue}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-2 rounded-xl border flex items-start gap-2" style="background-color: ${pal.light}; border-color: ${pal.border}">
+                                        <div class="w-6 h-6 rounded-lg flex items-center justify-center text-white flex-shrink-0 mt-0.5" style="background-color: ${pal.accent}">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <span class="text-[8px] font-extrabold uppercase text-slate-500 block">Sasaran</span>
+                                            <span class="font-bold text-slate-900 block leading-tight line-clamp-2">${d.target}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-2 rounded-xl border flex items-start gap-2" style="background-color: ${pal.light}; border-color: ${pal.border}">
+                                        <div class="w-6 h-6 rounded-lg flex items-center justify-center text-white flex-shrink-0 mt-0.5" style="background-color: ${pal.primary}">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <span class="text-[8px] font-extrabold uppercase text-slate-500 block">Anjuran</span>
+                                            <span class="font-bold text-slate-900 block leading-tight line-clamp-2">${d.organizer}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Aliran Kandungan: Garis Masa Objektif & Impak -->
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="rounded-xl p-2.5 border border-slate-200 bg-gradient-to-br from-white to-slate-50 relative">
+                                        <div class="flex items-center gap-2 mb-1.5">
+                                            <span class="px-2 py-0.5 rounded-md text-white text-[9px] font-extrabold" style="background-color: ${pal.primary}">FASA 01</span>
+                                            <h3 class="text-[10.5px] font-extrabold uppercase text-slate-900">Objektif & Ringkasan</h3>
+                                        </div>
+                                        ${d.objectivesCompactHtml}
+                                    </div>
+
+                                    <div class="rounded-xl p-2.5 border border-slate-200 bg-gradient-to-br from-white to-slate-50 relative">
+                                        <div class="flex items-center gap-2 mb-1.5">
+                                            <span class="px-2 py-0.5 rounded-md text-white text-[9px] font-extrabold" style="background-color: ${pal.accent}">FASA 02</span>
+                                            <h3 class="text-[10.5px] font-extrabold uppercase text-slate-900">Impak & Keberhasilan</h3>
+                                        </div>
+                                        ${d.impactCompactHtml}
+                                    </div>
+                                </div>
+
+                                <!-- Kolaj Dokumentasi Visual -->
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1.5">
+                                        <span class="px-2 py-0.5 rounded-md text-white text-[9px] font-extrabold" style="background-color: ${pal.secondary}">FASA 03</span>
+                                        <h3 class="text-[10.5px] font-extrabold uppercase text-slate-900">Dokumentasi Bergambar</h3>
+                                        <div class="h-[1px] flex-1 bg-slate-200"></div>
+                                    </div>
+                                    ${renderSmartPhotoCollage(appState.photos, { maxHeight: 225 })}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Pengesahan -->
+                        <div class="mx-[10mm] mb-[8mm] pt-2 border-t-2 flex justify-between text-[9.5px]" style="border-color: ${pal.border}">
+                            <div>
+                                <p class="text-slate-400 font-bold uppercase text-[8px] mb-4">Disediakan Oleh</p>
+                                <p class="font-extrabold text-slate-900 uppercase">${d.prepName}</p>
+                                <p class="text-slate-600">${d.prepRole}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-slate-400 font-bold uppercase text-[8px] mb-4">Disahkan Oleh</p>
+                                <p class="font-extrabold text-slate-900 uppercase">${d.verName}</p>
+                                <p class="text-slate-600">${d.verRole}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ---------------------------------------------------------------------
+            // TEMPLAT 3: EKSEKUTIF KORPORAT (EXECUTIVE SPLIT SIDEBAR)
+            // ---------------------------------------------------------------------
+            else if (appState.template === 'eksekutif_split') {
+                docEl.innerHTML = `
+                    <div class="w-full h-full grid grid-cols-12 bg-white">
+                        <!-- Panel Sisi Kiri Menegak (4 Lajur) -->
+                        <div class="col-span-4 h-full p-[7mm] text-white flex flex-col justify-between relative overflow-hidden" style="background-color: ${pal.primary}">
+                            <!-- Corak Bulatan Halus di Latar Sidebar -->
+                            <svg class="absolute -bottom-12 -left-12 w-56 h-56 pointer-events-none opacity-10" viewBox="0 0 200 200">
+                                <circle cx="100" cy="100" r="90" stroke="#ffffff" stroke-width="18" fill="none"/>
+                                <circle cx="100" cy="100" r="50" fill="#ffffff"/>
+                            </svg>
+
+                            <div class="relative z-10 space-y-4">
+                                <!-- Identiti Logo & Organisasi -->
+                                <div class="text-center pb-3.5 border-b border-white/20">
+                                    <div class="inline-flex bg-white p-2 rounded-2xl shadow-md mb-2.5">
+                                        ${logoHtml}
+                                    </div>
+                                    <h2 class="text-[11.5px] font-extrabold uppercase tracking-wide leading-snug">${d.org}</h2>
+                                    <p class="text-[9.5px] text-white/80 mt-0.5">${d.suborg}</p>
+                                </div>
+
+                                <!-- Lencana Kategori -->
+                                <div class="text-center">
+                                    <span class="inline-block px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-white/15 border border-white/25">
+                                        ${d.category}
+                                    </span>
+                                    ${d.ref ? `<p class="text-[9px] font-mono text-white/75 mt-1">Ruj: ${d.ref}</p>` : ''}
+                                </div>
+
+                                <!-- Kad Metadata Menegak -->
+                                <div class="space-y-2 text-[9.5px]">
+                                    <div class="p-2.5 rounded-xl bg-white/10 border border-white/15">
+                                        <span class="text-[8px] font-bold uppercase tracking-wider text-white/70 block">Tarikh Pelaksanaan</span>
+                                        <span class="font-bold text-white block mt-0.5">${d.date}</span>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-white/10 border border-white/15">
+                                        <span class="text-[8px] font-bold uppercase tracking-wider text-white/70 block">Masa</span>
+                                        <span class="font-bold text-white block mt-0.5">${d.time}</span>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-white/10 border border-white/15">
+                                        <span class="text-[8px] font-bold uppercase tracking-wider text-white/70 block">Tempat / Lokasi</span>
+                                        <span class="font-bold text-white block mt-0.5 leading-snug">${d.venue}</span>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-white/10 border border-white/15">
+                                        <span class="text-[8px] font-bold uppercase tracking-wider text-white/70 block">Kumpulan Sasaran</span>
+                                        <span class="font-bold text-white block mt-0.5 leading-snug">${d.target}</span>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-white/10 border border-white/15">
+                                        <span class="text-[8px] font-bold uppercase tracking-wider text-white/70 block">Anjuran</span>
+                                        <span class="font-bold text-white block mt-0.5 leading-snug">${d.organizer}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tandatangan dalam Sidebar -->
+                            <div class="relative z-10 pt-3 border-t border-white/20 space-y-3 text-[9px]">
+                                <div>
+                                    <p class="text-white/70 uppercase text-[7.5px] font-bold mb-4">Disediakan Oleh:</p>
+                                    <p class="font-extrabold text-white uppercase leading-tight">${d.prepName}</p>
+                                    <p class="text-white/80 text-[8.5px]">${d.prepRole}</p>
+                                </div>
+                                <div>
+                                    <p class="text-white/70 uppercase text-[7.5px] font-bold mb-4">Disahkan Oleh:</p>
+                                    <p class="font-extrabold text-white uppercase leading-tight">${d.verName}</p>
+                                    <p class="text-white/80 text-[8.5px]">${d.verRole}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ruangan Utama Kanan (8 Lajur) -->
+                        <div class="col-span-8 h-full p-[9mm] flex flex-col justify-between bg-white">
+                            <div class="space-y-3">
+                                <!-- Tajuk Utama -->
+                                <div class="pb-2.5 border-b-2" style="border-color: ${pal.accent}">
+                                    <span class="text-[9px] font-extrabold uppercase tracking-widest" style="color: ${pal.accent}">One Page Report • Ringkasan Eksekutif</span>
+                                    <h1 class="text-[15.5px] font-black text-slate-900 uppercase leading-snug mt-0.5">${d.title}</h1>
+                                </div>
+
+                                <!-- Objektif & Ringkasan -->
+                                <div class="p-3 rounded-xl border" style="background-color: ${pal.light}; border-color: ${pal.border}">
+                                    <h3 class="text-[10.5px] font-extrabold uppercase tracking-wider mb-1.5 flex items-center gap-2" style="color: ${pal.primary}">
+                                        <span class="w-2 h-2 rounded-full" style="background-color: ${pal.primary}"></span>
+                                        Objektif & Ringkasan Pelaksanaan
+                                    </h3>
+                                    ${d.objectivesCompactHtml}
+                                </div>
+
+                                <!-- Impak & Pencapaian -->
+                                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/60">
+                                    <h3 class="text-[10.5px] font-extrabold uppercase tracking-wider mb-1.5 flex items-center gap-2" style="color: ${pal.secondary}">
+                                        <span class="w-2 h-2 rounded-full" style="background-color: ${pal.accent}"></span>
+                                        Impak, Pencapaian & Rumusan
+                                    </h3>
+                                    ${d.impactCompactHtml}
+                                </div>
+
+                                <!-- Dokumentasi Bergambar -->
+                                <div>
+                                    <h3 class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">Dokumentasi Bergambar Program</h3>
+                                    ${renderSmartPhotoCollage(appState.photos, { maxHeight: 245 })}
+                                </div>
+                            </div>
+
+                            <div class="text-right text-[8.5px] text-slate-400 font-medium pt-1 border-t border-slate-100">
+                                Dokumen Rasmi Dijana Secara Automatik • Sistem Pelaporan OPR
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ---------------------------------------------------------------------
+            // TEMPLAT 4: KLASIK RASMI BERPRESTIJ (CLASSIC PRESTIGE)
+            // ---------------------------------------------------------------------
+            else if (appState.template === 'klasik') {
+                docEl.innerHTML = `
+                    <div class="w-full h-full p-[8.5mm] bg-white">
+                        <div class="w-full h-full border-2 p-[4.5mm] flex flex-col justify-between relative" style="border-color: ${pal.primary}">
+                            <!-- Bingkai Dalam Halus -->
+                            <div>
+                                <!-- Jalur Dwi-Warna Prestij -->
+                                <div class="h-1.5 w-full mb-2.5" style="background: linear-gradient(90deg, ${pal.primary} 0%, ${pal.accent} 50%, ${pal.primary} 100%);"></div>
+
+                                <!-- Kepala Surat Rasmi Berpusat -->
+                                <div class="flex items-center gap-4 pb-2.5 border-b-4 border-double" style="border-color: ${pal.primary}">
+                                    ${logoHtml}
+                                    <div class="flex-1 text-center pr-6">
+                                        <h2 class="font-serif-formal text-[13.5px] font-black uppercase tracking-wide text-slate-900 leading-tight">${d.org}</h2>
+                                        <p class="text-[10.5px] font-semibold text-slate-700 mt-0.5">${d.suborg}</p>
+                                        <div class="mt-1.5 inline-flex items-center gap-2 px-3.5 py-0.5 text-[9.5px] font-extrabold uppercase tracking-widest text-white" style="background-color: ${pal.primary}">
+                                            <span>${d.category}</span>
+                                            <span>•</span>
+                                            <span>ONE PAGE REPORT</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Jadual Maklumat Rasmi Berstruktur -->
+                                <table class="w-full border-collapse border border-slate-400 text-[10px] mt-2.5 mb-2.5">
+                                    <tr>
+                                        <td class="border border-slate-400 px-2.5 py-1.5 font-bold uppercase w-[23%]" style="background-color: ${pal.light}; color: ${pal.primary}">Tajuk Program</td>
+                                        <td colspan="3" class="border border-slate-400 px-2.5 py-1.5 font-extrabold text-slate-900 uppercase">${d.title}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-bold" style="background-color: ${pal.light}">Tarikh / Hari</td>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-semibold w-[28%]">${d.date}</td>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-bold w-[17%]" style="background-color: ${pal.light}">Masa</td>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-semibold">${d.time}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-bold" style="background-color: ${pal.light}">Tempat</td>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-semibold">${d.venue}</td>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-bold" style="background-color: ${pal.light}">No. Rujukan</td>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-semibold">${d.ref || 'Rasmi / Dalaman'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-bold" style="background-color: ${pal.light}">Sasaran</td>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-semibold">${d.target}</td>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-bold" style="background-color: ${pal.light}">Anjuran</td>
+                                        <td class="border border-slate-400 px-2.5 py-1 font-semibold">${d.organizer}</td>
+                                    </tr>
+                                </table>
+
+                                <!-- Kotak Ringkasan Eksekutif (Objektif & Impak) -->
+                                <div class="grid grid-cols-2 gap-2.5 mb-2.5">
+                                    <div class="border border-slate-400">
+                                        <div class="px-2.5 py-1 border-b border-slate-400 font-bold text-[10px] uppercase tracking-wider text-white" style="background-color: ${pal.primary}">
+                                            1.0 Objektif & Ringkasan Pelaksanaan
+                                        </div>
+                                        <div class="p-2.5">
+                                            ${d.objectivesCompactHtml}
+                                        </div>
+                                    </div>
+                                    <div class="border border-slate-400">
+                                        <div class="px-2.5 py-1 border-b border-slate-400 font-bold text-[10px] uppercase tracking-wider text-white" style="background-color: ${pal.secondary}">
+                                            2.0 Impak, Pencapaian & Rumusan
+                                        </div>
+                                        <div class="p-2.5">
+                                            ${d.impactCompactHtml}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Seksyen Laporan Bergambar -->
+                                <div class="border border-slate-400">
+                                    <div class="px-2.5 py-1 border-b border-slate-400 font-bold text-[10px] uppercase tracking-wider" style="background-color: ${pal.light}; color: ${pal.primary}">
+                                        3.0 Dokumentasi Bergambar Sepanjang Program
+                                    </div>
+                                    <div class="p-2">
+                                        ${renderSmartPhotoCollage(appState.photos, { maxHeight: 215 })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tandatangan Pengesahan Formal -->
+                            <div class="grid grid-cols-2 gap-6 pt-2 text-[9.5px]">
+                                <div class="border border-slate-300 bg-slate-50/50 p-2">
+                                    <p class="font-bold text-slate-700 mb-5">Disediakan oleh:</p>
+                                    <p class="font-extrabold text-slate-900 uppercase">(${d.prepName})</p>
+                                    <p class="text-slate-600">${d.prepRole}</p>
+                                </div>
+                                <div class="border border-slate-300 bg-slate-50/50 p-2">
+                                    <p class="font-bold text-slate-700 mb-5">Disahkan oleh:</p>
+                                    <p class="font-extrabold text-slate-900 uppercase">(${d.verName})</p>
+                                    <p class="text-slate-600">${d.verRole}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ---------------------------------------------------------------------
+            // TEMPLAT 5: GRID MODULAR KONTEMPORARI (BENTO MODULAR GRID)
+            // ---------------------------------------------------------------------
+            else if (appState.template === 'bento') {
+                docEl.innerHTML = `
+                    <div class="w-full h-full p-[9mm] bg-slate-100/90 flex flex-col justify-between gap-2.5">
+                        <!-- Baris 1: Kad Identiti Organisasi & Kad Tajuk Utama -->
+                        <div class="grid grid-cols-12 gap-2.5">
+                            <div class="col-span-5 bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs flex items-center gap-3">
+                                ${logoHtml}
+                                <div class="min-w-0">
+                                    <span class="inline-block px-2 py-0.5 rounded-md text-[8px] font-extrabold uppercase tracking-wider text-white mb-1" style="background-color: ${pal.primary}">
+                                        ${d.category}
+                                    </span>
+                                    <h2 class="text-[10.5px] font-extrabold text-slate-900 uppercase leading-tight line-clamp-2">${d.org}</h2>
+                                    <p class="text-[9px] text-slate-500 truncate mt-0.5">${d.suborg}</p>
+                                </div>
+                            </div>
+
+                            <div class="col-span-7 rounded-2xl p-3.5 text-white shadow-2xs flex flex-col justify-center relative overflow-hidden" style="background: linear-gradient(135deg, ${pal.primary} 0%, ${pal.secondary} 100%);">
+                                <div class="flex items-center justify-between text-[8.5px] font-bold uppercase tracking-widest text-white/75 mb-1">
+                                    <span>One Page Report</span>
+                                    <span>${d.ref ? `No. Ruj: ${d.ref}` : 'Pelaporan Rasmi'}</span>
+                                </div>
+                                <h1 class="text-[13.5px] font-black uppercase leading-snug tracking-tight">${d.title}</h1>
+                            </div>
+                        </div>
+
+                        <!-- Baris 2: 4 Kad Modular Metadata -->
+                        <div class="grid grid-cols-4 gap-2.5 text-[9.5px]">
+                            <div class="bg-white rounded-2xl p-2.5 border border-slate-200/90 shadow-2xs">
+                                <span class="text-[8px] font-extrabold uppercase tracking-wider block" style="color: ${pal.primary}">Tarikh & Masa</span>
+                                <p class="font-bold text-slate-900 mt-0.5 leading-tight">${d.date}</p>
+                                <p class="text-[8.5px] text-slate-500 mt-0.5">${d.time}</p>
+                            </div>
+                            <div class="bg-white rounded-2xl p-2.5 border border-slate-200/90 shadow-2xs">
+                                <span class="text-[8px] font-extrabold uppercase tracking-wider block" style="color: ${pal.primary}">Tempat / Lokasi</span>
+                                <p class="font-bold text-slate-900 mt-0.5 leading-tight line-clamp-2">${d.venue}</p>
+                            </div>
+                            <div class="bg-white rounded-2xl p-2.5 border border-slate-200/90 shadow-2xs">
+                                <span class="text-[8px] font-extrabold uppercase tracking-wider block" style="color: ${pal.primary}">Kumpulan Sasaran</span>
+                                <p class="font-bold text-slate-900 mt-0.5 leading-tight line-clamp-2">${d.target}</p>
+                            </div>
+                            <div class="bg-white rounded-2xl p-2.5 border border-slate-200/90 shadow-2xs">
+                                <span class="text-[8px] font-extrabold uppercase tracking-wider block" style="color: ${pal.primary}">Anjuran</span>
+                                <p class="font-bold text-slate-900 mt-0.5 leading-tight line-clamp-2">${d.organizer}</p>
+                            </div>
+                        </div>
+
+                        <!-- Baris 3: Kad Objektif & Kad Impak -->
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div class="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${pal.primary}"></span>
+                                    <h3 class="text-[10px] font-extrabold uppercase tracking-wider text-slate-900">Objektif & Ringkasan</h3>
+                                </div>
+                                ${d.objectivesCompactHtml}
+                            </div>
+
+                            <div class="rounded-2xl p-3 border shadow-2xs" style="background-color: ${pal.light}; border-color: ${pal.border}">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${pal.accent}"></span>
+                                    <h3 class="text-[10px] font-extrabold uppercase tracking-wider text-slate-900">Impak & Pencapaian</h3>
+                                </div>
+                                ${d.impactCompactHtml}
+                            </div>
+                        </div>
+
+                        <!-- Baris 4: Kad Besar Galeri Gambar Pintar -->
+                        <div class="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs flex-1 flex flex-col justify-center">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <h3 class="text-[10px] font-extrabold uppercase tracking-wider" style="color: ${pal.primary}">Dokumentasi Visual Program</h3>
+                                <span class="text-[8.5px] font-semibold text-slate-400">Susun Atur Pintar</span>
+                            </div>
+                            ${renderSmartPhotoCollage(appState.photos, { maxHeight: 215 })}
+                        </div>
+
+                        <!-- Baris 5: Kad Pengesahan Bawah -->
+                        <div class="grid grid-cols-2 gap-2.5 text-[9.5px]">
+                            <div class="bg-white rounded-2xl px-3.5 py-2 border border-slate-200/90 shadow-2xs">
+                                <span class="text-[8px] font-bold uppercase tracking-wider text-slate-400 block mb-3.5">Disediakan Oleh</span>
+                                <p class="font-extrabold text-slate-900 uppercase leading-tight">${d.prepName}</p>
+                                <p class="text-slate-500 text-[8.5px]">${d.prepRole}</p>
+                            </div>
+                            <div class="bg-white rounded-2xl px-3.5 py-2 border border-slate-200/90 shadow-2xs">
+                                <span class="text-[8px] font-bold uppercase tracking-wider text-slate-400 block mb-3.5">Disahkan Oleh</span>
+                                <p class="font-extrabold text-slate-900 uppercase leading-tight">${d.verName}</p>
+                                <p class="text-slate-500 text-[8.5px]">${d.verRole}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // =========================================================================
+        // 6. PENGSKALAAN PRATONTON A4 RESPONSIF & ZOOM
+        // =========================================================================
+        function updatePreviewScale() {
+            const wrapper = document.getElementById('preview-wrapper');
+            const scaler = document.getElementById('preview-scaler');
+            const doc = document.getElementById('a4-document');
+            const zoomLabel = document.getElementById('zoom-label');
+
+            if (!wrapper || !scaler || !doc || wrapper.offsetParent === null) return;
+
+            // Saiz 210mm dalam piksel pada 96 DPI (~793.7px)
+            const a4WidthPx = 793.7;
+            const a4HeightPx = 1122.5;
+            const availableWidth = wrapper.clientWidth - 48; // padding
+
+            let scale = customZoom !== null
+                ? customZoom
+                : Math.min(1, Math.max(0.35, availableWidth / a4WidthPx));
+
+            doc.style.transform = `scale(${scale})`;
+            scaler.style.width = `${a4WidthPx * scale}px`;
+            scaler.style.height = `${a4HeightPx * scale}px`;
+
+            zoomLabel.textContent = customZoom !== null
+                ? `${Math.round(scale * 100)}%`
+                : `Auto (${Math.round(scale * 100)}%)`;
+        }
+
+        function adjustZoom(delta) {
+            const doc = document.getElementById('a4-document');
+            const currentTransform = doc.style.transform;
+            const match = currentTransform.match(/scale\(([^)]+)\)/);
+            const current = match ? parseFloat(match[1]) : 0.8;
+            customZoom = Math.min(1.4, Math.max(0.35, +(current + delta).toFixed(2)));
+            updatePreviewScale();
+        }
+
+        function resetZoom() {
+            customZoom = null;
+            updatePreviewScale();
+        }
+
+        function switchMobileTab(tab) {
+            const editorPanel = document.getElementById('panel-editor');
+            const previewPanel = document.getElementById('panel-preview');
+            const tabEdit = document.getElementById('tab-edit');
+            const tabPreview = document.getElementById('tab-preview');
+
+            if (tab === 'edit') {
+                editorPanel.classList.remove('hidden');
+                previewPanel.classList.add('hidden');
+                previewPanel.classList.remove('flex');
+                tabEdit.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-blue-900 text-white transition';
+                tabPreview.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 transition';
+            } else {
+                editorPanel.classList.add('hidden');
+                previewPanel.classList.remove('hidden');
+                previewPanel.classList.add('flex');
+                tabPreview.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-blue-900 text-white transition';
+                tabEdit.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 transition';
+                setTimeout(updatePreviewScale, 50);
+            }
+        }
+
+        // =========================================================================
+        // 7. PENJANAAN & MUAT TURUN PDF SATU MUKA SURAT A4
+        // =========================================================================
+        function printDirect() {
+            window.print();
+        }
+
+        async function generatePDF() {
+            const btn = document.getElementById('btn-download-pdf');
+            const originalHtml = btn.innerHTML;
+
+            // Jika library html2pdf tidak tersedia, terus guna window.print()
+            if (typeof html2pdf === 'undefined') {
+                window.print();
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Menjana PDF...</span>`;
+                showToast('Sedang menjana fail PDF A4 berkualiti tinggi...', 'info');
+
+                // Klon elemen A4 pada skala 1:1 (tanpa transform scale) supaya hasil PDF tepat 210mm x 297mm
+                const sourceDoc = document.getElementById('a4-document');
+                const cloneContainer = document.createElement('div');
+                cloneContainer.style.position = 'fixed';
+                cloneContainer.style.left = '-10000px';
+                cloneContainer.style.top = '0';
+                cloneContainer.style.width = '210mm';
+                cloneContainer.style.height = '296.8mm'; // Sedikit kurang dari 297mm bagi mengelak halaman ke-2 kosong
+                cloneContainer.style.overflow = 'hidden';
+                cloneContainer.style.background = '#ffffff';
+
+                const clonedDoc = sourceDoc.cloneNode(true);
+                clonedDoc.style.transform = 'none';
+                clonedDoc.style.boxShadow = 'none';
+                clonedDoc.style.margin = '0';
+                clonedDoc.style.width = '210mm';
+                clonedDoc.style.height = '296.8mm';
+                cloneContainer.appendChild(clonedDoc);
+                document.body.appendChild(cloneContainer);
+
+                const safeTitle = (appState.title || 'One_Page_Report')
+                    .replace(/[^a-zA-Z0-9\s-_]/g, '')
+                    .trim()
+                    .replace(/\s+/g, '_')
+                    .substring(0, 45);
+
+                const opt = {
+                    margin: 0,
+                    filename: `OPR_${safeTitle || 'Laporan_Rasmi'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        letterRendering: true,
+                        width: 794,
+                        height: 1122
+                    },
+                    jsPDF: {
+                        unit: 'mm',
+                        format: 'a4',
+                        orientation: 'portrait'
+                    }
+                };
+
+                await html2pdf().set(opt).from(clonedDoc).save();
+                document.body.removeChild(cloneContainer);
+                showToast('Fail PDF One Page Report berjaya dimuat turun!', 'success');
+            } catch (err) {
+                console.error('Ralat menjana PDF:', err);
+                showToast('Membuka dialog cetakan PDF pelayar sebagai alternatif...', 'warning');
+                window.print();
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        // =========================================================================
+        // 8. INISIALISASI APLIKASI
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSampleData();
+            updatePreviewScale();
+        });
+
+        window.addEventListener('resize', () => {
+            updatePreviewScale();
+        });
+    </script>
+</body>
+</html>
