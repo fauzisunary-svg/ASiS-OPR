@@ -115,53 +115,394 @@
 </head>
 <body class="text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-900">
 
+    <!-- Gerbang Log Masuk & Pendaftaran Pengguna (Auth Gate) -->
+    <div id="auth-gate" class="no-print fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden grid grid-cols-1 lg:grid-cols-12 my-auto">
+            <!-- Panel Kiri: Maklumat Sistem -->
+            <div class="lg:col-span-5 bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 text-white p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden">
+                <div class="relative z-10">
+                    <div class="w-12 h-12 rounded-2xl bg-white/15 border border-white/25 flex items-center justify-center mb-5">
+                        <svg class="w-7 h-7 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-amber-400/20 text-amber-300 border border-amber-300/30 mb-2">Portal Pelaporan Rasmi</span>
+                    <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight leading-snug">Sistem Penjana One Page Report (OPR)</h2>
+                    <p class="text-xs sm:text-sm text-blue-100/85 mt-2 leading-relaxed">
+                        Platform pelaporan rasmi satu muka surat A4 yang dilengkapi arkib penyimpanan rekod automatik dan jejak audit penggunaan pengguna.
+                    </p>
+
+                    <div class="mt-6 space-y-2.5 text-xs text-blue-100">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-5 h-5 rounded-full bg-emerald-500/25 text-emerald-300 flex items-center justify-center font-bold">✓</span>
+                            <span>5 Rekabentuk Pelaporan Rasmi & Kreatif (A4)</span>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-5 h-5 rounded-full bg-emerald-500/25 text-emerald-300 flex items-center justify-center font-bold">✓</span>
+                            <span>Arkib Salinan OPR & Gambar Resolusi Penuh</span>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-5 h-5 rounded-full bg-emerald-500/25 text-emerald-300 flex items-center justify-center font-bold">✓</span>
+                            <span>Rekod Pengguna Berdaftar & Log Penggunaan</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative z-10 mt-6 pt-4 border-t border-white/15">
+                    <p class="text-[11px] text-blue-200/80 mb-2">Ingin menguji sistem dengan pantas tanpa mendaftar?</p>
+                    <button type="button" onclick="quickDemoLogin()" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition shadow-md cursor-pointer flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span>Log Masuk Pantas (Akaun Demo)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel Kanan: Tab Log Masuk & Daftar Pengguna -->
+            <div class="lg:col-span-7 p-6 sm:p-8 bg-white">
+                <div class="flex border-b border-slate-200 mb-5">
+                    <button type="button" id="auth-tab-login" onclick="switchAuthTab('login')" class="flex-1 pb-3 text-xs sm:text-sm font-extrabold border-b-2 border-blue-900 text-blue-900 transition cursor-pointer">
+                        Log Masuk Pengguna
+                    </button>
+                    <button type="button" id="auth-tab-register" onclick="switchAuthTab('register')" class="flex-1 pb-3 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition cursor-pointer">
+                        Daftar Pengguna Baharu
+                    </button>
+                </div>
+
+                <!-- Borang Log Masuk -->
+                <form id="form-login" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ID Kakitangan / No. Kad Pengenalan / E-mel Rasmi</label>
+                        <input type="text" id="login-identifier" required placeholder="Masukkan ID Pengguna atau E-mel berdaftar" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:bg-white focus:border-blue-900">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Kata Laluan</label>
+                        <input type="password" id="login-password" required placeholder="Masukkan kata laluan anda" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:bg-white focus:border-blue-900">
+                    </div>
+                    <div id="login-error-msg" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700"></div>
+
+                    <button type="submit" class="w-full py-3 px-4 rounded-xl bg-blue-900 hover:bg-blue-800 text-white font-bold text-sm shadow-sm transition cursor-pointer">
+                        Log Masuk ke Sistem
+                    </button>
+
+                    <div id="saved-accounts-quick" class="pt-3 border-t border-slate-100 hidden">
+                        <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Akaun Berdaftar di Peranti Ini:</p>
+                        <div id="saved-accounts-list" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                </form>
+
+                <!-- Borang Daftar Pengguna Baharu -->
+                <form id="form-register" onsubmit="handleRegisterSubmit(event)" class="hidden space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11.5px] font-bold text-slate-700 mb-1">Nama Penuh <span class="text-rose-600">*</span></label>
+                            <input type="text" id="reg-name" required placeholder="Contoh: AHMAD BIN ALI" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:bg-white focus:border-blue-900">
+                        </div>
+                        <div>
+                            <label class="block text-[11.5px] font-bold text-slate-700 mb-1">No. KP / ID Kakitangan <span class="text-rose-600">*</span></label>
+                            <input type="text" id="reg-staffid" required placeholder="Contoh: KPM-880101" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:bg-white focus:border-blue-900">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11.5px] font-bold text-slate-700 mb-1">Jawatan <span class="text-rose-600">*</span></label>
+                            <input type="text" id="reg-role" required placeholder="Contoh: Pegawai Tadbir / Guru" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:bg-white focus:border-blue-900">
+                        </div>
+                        <div>
+                            <label class="block text-[11.5px] font-bold text-slate-700 mb-1">Bahagian / Unit / Organisasi <span class="text-rose-600">*</span></label>
+                            <input type="text" id="reg-org" required placeholder="Contoh: SMK Seri Perdana" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:bg-white focus:border-blue-900">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11.5px] font-bold text-slate-700 mb-1">E-mel Rasmi <span class="text-rose-600">*</span></label>
+                            <input type="email" id="reg-email" required placeholder="nama@organisasi.gov.my" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:bg-white focus:border-blue-900">
+                        </div>
+                        <div>
+                            <label class="block text-[11.5px] font-bold text-slate-700 mb-1">No. Telefon <span class="text-rose-600">*</span></label>
+                            <input type="tel" id="reg-phone" required placeholder="Contoh: 012-3456789" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:bg-white focus:border-blue-900">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11.5px] font-bold text-slate-700 mb-1">Kata Laluan <span class="text-rose-600">*</span></label>
+                        <input type="password" id="reg-password" required minlength="4" placeholder="Minimum 4 aksara" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:bg-white focus:border-blue-900">
+                    </div>
+
+                    <div id="reg-error-msg" class="hidden p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700"></div>
+
+                    <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-sm transition cursor-pointer">
+                        Daftar & Masuk ke Sistem
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pusat Rekod & Arkib Salinan OPR -->
+    <div id="modal-opr-archive" class="no-print hidden fixed inset-0 z-40 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+        <div class="bg-white w-full max-w-6xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <!-- Kepala Modal -->
+            <div class="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-900">Pusat Rekod & Arkib Salinan OPR</h3>
+                        <p class="text-xs text-slate-500">Semua salinan OPR yang dijana atau disimpan direkodkan secara automatik beserta gambar penuh.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="exportArchiveCSV()" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer">
+                        Eksport CSV
+                    </button>
+                    <button type="button" onclick="exportFullBackupJSON()" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer">
+                        Sandaran JSON
+                    </button>
+                    <label class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer">
+                        Pulih JSON
+                        <input type="file" accept=".json" class="hidden" onchange="importFullBackupJSON(event)">
+                    </label>
+                    <button type="button" onclick="closeModal('modal-opr-archive')" class="p-2 rounded-xl bg-slate-200/70 hover:bg-slate-300 text-slate-700 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bar Carian & Penapis -->
+            <div class="px-5 py-3 border-b border-slate-200 bg-white flex flex-wrap items-center gap-3">
+                <div class="flex-1 min-w-[220px] relative">
+                    <input type="text" id="archive-search-input" oninput="renderArchiveList()" placeholder="Cari tajuk program, lokasi, rujukan OPR, atau penyedia..." class="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:bg-white focus:border-blue-900">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <select id="archive-filter-template" onchange="renderArchiveList()" class="px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-700">
+                    <option value="all">Semua Templat Rekabentuk</option>
+                    <option value="editorial">Editorial Majalah</option>
+                    <option value="infografik">Infografik Moden</option>
+                    <option value="eksekutif_split">Eksekutif Korporat</option>
+                    <option value="klasik">Klasik Berprestij</option>
+                    <option value="bento">Grid Modular Bento</option>
+                </select>
+                <select id="archive-filter-status" onchange="renderArchiveList()" class="px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-700">
+                    <option value="all">Semua Status Rekod</option>
+                    <option value="Dijana PDF">Dijana PDF</option>
+                    <option value="Disimpan Manual">Disimpan Manual</option>
+                </select>
+            </div>
+
+            <!-- Senarai Kad Arkib OPR -->
+            <div id="archive-list-container" class="flex-1 overflow-y-auto custom-scrollbar p-5 bg-slate-100/60">
+                <!-- Kandungan dijana secara dinamik -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ringkasan Rekod OPR -->
+    <div id="modal-record-detail" class="no-print hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl max-h-[85vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <h4 class="text-sm font-extrabold text-slate-900">Butiran Terperinci Salinan Rekod OPR</h4>
+                <button type="button" onclick="closeModal('modal-record-detail')" class="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="record-detail-body" class="p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs"></div>
+        </div>
+    </div>
+
+    <!-- Modal Rekod Pengguna Berdaftar & Log Penggunaan Sistem -->
+    <div id="modal-system-logs" class="no-print hidden fixed inset-0 z-40 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+        <div class="bg-white w-full max-w-6xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <!-- Kepala Modal -->
+            <div class="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-800 text-white flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-900">Rekod Pengguna Berdaftar & Jejak Penggunaan Sistem</h3>
+                        <p class="text-xs text-slate-500">Pemantauan pendaftaran pengguna dan log aktiviti penjanaan pelaporan secara masa nyata.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('modal-system-logs')" class="p-2 rounded-xl bg-slate-200/70 hover:bg-slate-300 text-slate-700 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Kad Statistik Ringkas -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-white border-b border-slate-200">
+                <div class="p-3 rounded-2xl bg-blue-50 border border-blue-200">
+                    <span class="text-[11px] font-bold text-blue-800 uppercase block">Pengguna Berdaftar</span>
+                    <span id="stat-total-users" class="text-xl font-black text-blue-950">0</span>
+                </div>
+                <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+                    <span class="text-[11px] font-bold text-emerald-800 uppercase block">Aktiviti Penggunaan</span>
+                    <span id="stat-total-logs" class="text-xl font-black text-emerald-950">0</span>
+                </div>
+                <div class="p-3 rounded-2xl bg-amber-50 border border-amber-200">
+                    <span class="text-[11px] font-bold text-amber-800 uppercase block">Salinan OPR Disimpan</span>
+                    <span id="stat-total-oprs" class="text-xl font-black text-amber-950">0</span>
+                </div>
+                <div class="p-3 rounded-2xl bg-purple-50 border border-purple-200">
+                    <span class="text-[11px] font-bold text-purple-800 uppercase block">PDF Rasmi Dijana</span>
+                    <span id="stat-total-pdfs" class="text-xl font-black text-purple-950">0</span>
+                </div>
+            </div>
+
+            <!-- Sub-Tab: Senarai Pengguna vs Log Penggunaan -->
+            <div class="px-5 pt-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
+                <div class="flex gap-2">
+                    <button type="button" id="subtab-logs-btn" onclick="switchAdminSubtab('logs')" class="px-4 py-2 text-xs font-extrabold rounded-t-xl bg-white border-t border-x border-slate-200 text-blue-900 cursor-pointer">
+                        Log Penggunaan Sistem (Jejak Audit)
+                    </button>
+                    <button type="button" id="subtab-users-btn" onclick="switchAdminSubtab('users')" class="px-4 py-2 text-xs font-bold rounded-t-xl text-slate-600 hover:text-slate-900 cursor-pointer">
+                        Senarai Pengguna Berdaftar
+                    </button>
+                </div>
+
+                <div class="pb-2 flex items-center gap-2">
+                    <button type="button" onclick="exportUsersCSV()" class="px-3 py-1 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-[11px] font-bold text-slate-700 cursor-pointer">
+                        Eksport Pengguna (CSV)
+                    </button>
+                    <button type="button" onclick="exportLogsCSV()" class="px-3 py-1 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-[11px] font-bold text-slate-700 cursor-pointer">
+                        Eksport Log (CSV)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kandungan Sub-Tab Log Penggunaan -->
+            <div id="subtab-logs-panel" class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+                <div class="flex flex-wrap items-center gap-2">
+                    <input type="text" id="log-search-input" oninput="renderLogsTable()" placeholder="Cari nama pengguna, ID, atau butiran aktiviti..." class="flex-1 min-w-[200px] px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl">
+                    <select id="log-filter-action" onchange="renderLogsTable()" class="px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl font-semibold">
+                        <option value="all">Semua Jenis Aktiviti</option>
+                        <option value="Daftar Akaun">Daftar Akaun</option>
+                        <option value="Log Masuk">Log Masuk</option>
+                        <option value="Simpan Rekod OPR">Simpan Rekod OPR</option>
+                        <option value="Muat Turun PDF">Muat Turun PDF</option>
+                        <option value="Cetak OPR">Cetak OPR</option>
+                        <option value="Sunting Rekod OPR">Sunting Rekod OPR</option>
+                        <option value="Log Keluar">Log Keluar</option>
+                    </select>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-slate-100 text-slate-700 uppercase text-[10.5px] font-extrabold">
+                            <tr>
+                                <th class="py-2.5 px-3 border-b border-slate-200">Tarikh & Masa</th>
+                                <th class="py-2.5 px-3 border-b border-slate-200">Pengguna & ID</th>
+                                <th class="py-2.5 px-3 border-b border-slate-200">Jawatan / Organisasi</th>
+                                <th class="py-2.5 px-3 border-b border-slate-200">Aktiviti</th>
+                                <th class="py-2.5 px-3 border-b border-slate-200">Butiran Rekod</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-table-body" class="divide-y divide-slate-100 bg-white"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Kandungan Sub-Tab Senarai Pengguna -->
+            <div id="subtab-users-panel" class="hidden flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+                <input type="text" id="user-search-input" oninput="renderUsersTable()" placeholder="Cari nama, ID kakitangan, jawatan, atau organisasi..." class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl">
+                <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-slate-100 text-slate-700 uppercase text-[10.5px] font-extrabold">
+                            <tr>
+                                <th class="py-2.5 px-3 border-b border-slate-200">Nama Penuh</th>
+                                <th class="py-2.5 px-3 border-b border-slate-200">ID / No. KP</th>
+                                <th class="py-2.5 px-3 border-b border-slate-200">Jawatan</th>
+                                <th class="py-2.5 px-3 border-b border-slate-200">Bahagian / Organisasi</th>
+                                <th class="py-2.5 px-3 border-b border-slate-200">E-mel & Telefon</th>
+                                <th class="py-2.5 px-3 border-b border-slate-200">Tarikh Daftar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body" class="divide-y divide-slate-100 bg-white"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Notifikasi Toast (Gantian kepada alert) -->
     <div id="toast-container" class="no-print fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- Bar Navigasi Atas -->
-    <header class="no-print sticky top-0 z-30 bg-white border-b border-slate-200 px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-sm">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <header class="no-print sticky top-0 z-30 bg-white border-b border-slate-200 px-3 lg:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2.5 shadow-sm">
+        <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-sm flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
             </div>
             <div>
                 <div class="flex items-center gap-2">
-                    <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Penjana One Page Report (OPR)</h1>
-                    <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">Edisi Kreatif & Rasmi</span>
+                    <h1 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight">Penjana One Page Report (OPR)</h1>
+                    <span class="hidden xl:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">Edisi Kreatif & Rasmi</span>
                 </div>
-                <p class="text-xs text-slate-500">Sistem Pelaporan Satu Muka Surat Automatik • Format Piawai A4</p>
+                <!-- Info Pengguna Aktif -->
+                <div id="active-user-banner" class="flex items-center gap-1.5 text-[11px] text-slate-600">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="nav-user-name" class="font-bold text-slate-800">Tetamu</span>
+                    <span class="hidden sm:inline text-slate-400">•</span>
+                    <span id="nav-user-role" class="hidden sm:inline truncate max-w-[180px]">Pengguna Sistem</span>
+                </div>
             </div>
         </div>
 
-        <div class="flex items-center gap-2 sm:gap-3">
-            <button type="button" onclick="loadSampleData()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
-                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <!-- Butang Pusat Rekod & Arkib OPR -->
+            <button type="button" onclick="openOprArchiveModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-blue-950 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition cursor-pointer">
+                <svg class="w-4 h-4 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                <span>Rekod & Arkib OPR</span>
+                <span id="nav-archive-count" class="px-1.5 py-0.2 rounded-full bg-blue-900 text-white text-[10px] font-extrabold">0</span>
+            </button>
+
+            <!-- Butang Rekod Pengguna & Log Sistem -->
+            <button type="button" onclick="openSystemLogsModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition cursor-pointer">
+                <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                <span class="hidden md:inline">Rekod Pengguna & Log</span>
+                <span class="md:hidden">Log</span>
+            </button>
+
+            <button type="button" onclick="loadSampleData()" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer" title="Isi Contoh Data">
+                <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
-                <span>Isi Contoh Data</span>
+                <span class="hidden xl:inline">Contoh Data</span>
             </button>
 
-            <button type="button" onclick="resetForm()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition cursor-pointer" title="Kosongkan Borang">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" onclick="resetForm()" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition cursor-pointer" title="Kosongkan Borang">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
-                <span class="hidden md:inline">Set Semula</span>
             </button>
 
-            <button type="button" onclick="printDirect()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl transition cursor-pointer" title="Cetak atau Simpan PDF melalui Pelayar">
-                <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Butang Simpan ke Rekod OPR -->
+            <button type="button" onclick="saveCurrentOprToArchive('Disimpan Manual')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-xl transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                <span>Simpan Rekod</span>
+            </button>
+
+            <button type="button" onclick="printDirect()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl transition cursor-pointer" title="Cetak atau Simpan PDF melalui Pelayar">
+                <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                 </svg>
                 <span class="hidden sm:inline">Cetak</span>
             </button>
 
-            <button type="button" id="btn-download-pdf" onclick="generatePDF()" class="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-sm transition cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" id="btn-download-pdf" onclick="generatePDF()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-sm transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                 </svg>
                 <span>Jana & Muat Turun PDF</span>
+            </button>
+
+            <!-- Butang Log Keluar -->
+            <button type="button" onclick="logoutUser()" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-rose-700 bg-slate-100 hover:bg-rose-50 rounded-xl transition cursor-pointer" title="Log Keluar">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
             </button>
         </div>
     </header>
@@ -1873,13 +2214,17 @@
         // =========================================================================
         // 7. PENJANAAN & MUAT TURUN PDF SATU MUKA SURAT A4
         // =========================================================================
-        function printDirect() {
+        async function printDirect() {
+            await recordSystemLog('Cetak OPR', `Mencetak laporan: ${appState.title || 'Laporan Tanpa Tajuk'}`);
             window.print();
         }
 
         async function generatePDF() {
             const btn = document.getElementById('btn-download-pdf');
             const originalHtml = btn.innerHTML;
+
+            // Simpan salinan automatik ke dalam Pusat Rekod & Arkib OPR sebelum penjanaan PDF
+            await saveCurrentOprToArchive('Dijana PDF', true);
 
             // Jika library html2pdf tidak tersedia, terus guna window.print()
             if (typeof html2pdf === 'undefined') {
@@ -1890,7 +2235,7 @@
             try {
                 btn.disabled = true;
                 btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Menjana PDF...</span>`;
-                showToast('Sedang menjana fail PDF A4 berkualiti tinggi...', 'info');
+                showToast('Sedang menjana fail PDF A4 & menyimpan ke Arkib OPR...', 'info');
 
                 // Klon elemen A4 pada skala 1:1 (tanpa transform scale) supaya hasil PDF tepat 210mm x 297mm
                 const sourceDoc = document.getElementById('a4-document');
@@ -1938,7 +2283,8 @@
 
                 await html2pdf().set(opt).from(clonedDoc).save();
                 document.body.removeChild(cloneContainer);
-                showToast('Fail PDF One Page Report berjaya dimuat turun!', 'success');
+                await recordSystemLog('Muat Turun PDF', `Berjaya memuat turun PDF: OPR_${safeTitle || 'Laporan_Rasmi'}.pdf`);
+                showToast('PDF dimuat turun & salinan OPR telah direkodkan!', 'success');
             } catch (err) {
                 console.error('Ralat menjana PDF:', err);
                 showToast('Membuka dialog cetakan PDF pelayar sebagai alternatif...', 'warning');
@@ -1950,11 +2296,722 @@
         }
 
         // =========================================================================
-        // 8. INISIALISASI APLIKASI
+        // 8. PANGKALAN DATA TEMPATAN (INDEXEDDB + SANDARAN), PENGGUNA & ARKIB OPR
         // =========================================================================
-        window.addEventListener('DOMContentLoaded', () => {
+        const DB_NAME = 'SistemOPRRasmiDB_v1';
+        const DB_VERSION = 1;
+        let dbInstance = null;
+        let currentUser = null;
+        let cachedUsers = [];
+        let cachedLogs = [];
+        let cachedArchive = [];
+
+        const templateNamesMap = {
+            editorial: 'Editorial Majalah',
+            infografik: 'Infografik Moden',
+            eksekutif_split: 'Eksekutif Korporat',
+            klasik: 'Klasik Berprestij',
+            bento: 'Grid Modular Bento'
+        };
+
+        function formatTimestampMY(dateObj = new Date()) {
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${pad(dateObj.getDate())}/${pad(dateObj.getMonth() + 1)}/${dateObj.getFullYear()} ${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}:${pad(dateObj.getSeconds())}`;
+        }
+
+        function initDatabase() {
+            return new Promise((resolve) => {
+                if (!window.indexedDB) {
+                    resolve(null);
+                    return;
+                }
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('users')) {
+                        db.createObjectStore('users', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('logs')) {
+                        db.createObjectStore('logs', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('opr_archive')) {
+                        db.createObjectStore('opr_archive', { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = (event) => {
+                    dbInstance = event.target.result;
+                    resolve(dbInstance);
+                };
+                request.onerror = () => {
+                    resolve(null);
+                };
+            });
+        }
+
+        function dbPut(storeName, item) {
+            return new Promise((resolve) => {
+                if (!dbInstance) {
+                    try {
+                        const existing = JSON.parse(localStorage.getItem(`opr_fallback_${storeName}`) || '[]');
+                        const idx = existing.findIndex(x => x.id === item.id);
+                        if (idx >= 0) existing[idx] = item; else existing.push(item);
+                        localStorage.setItem(`opr_fallback_${storeName}`, JSON.stringify(existing));
+                    } catch (e) {}
+                    resolve(item);
+                    return;
+                }
+                const tx = dbInstance.transaction(storeName, 'readwrite');
+                tx.objectStore(storeName).put(item);
+                tx.oncomplete = () => resolve(item);
+                tx.onerror = () => resolve(item);
+            });
+        }
+
+        function dbDelete(storeName, id) {
+            return new Promise((resolve) => {
+                if (!dbInstance) {
+                    try {
+                        const existing = JSON.parse(localStorage.getItem(`opr_fallback_${storeName}`) || '[]');
+                        localStorage.setItem(`opr_fallback_${storeName}`, JSON.stringify(existing.filter(x => x.id !== id)));
+                    } catch (e) {}
+                    resolve();
+                    return;
+                }
+                const tx = dbInstance.transaction(storeName, 'readwrite');
+                tx.objectStore(storeName).delete(id);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => resolve();
+            });
+        }
+
+        function dbGetAll(storeName) {
+            return new Promise((resolve) => {
+                if (!dbInstance) {
+                    try {
+                        resolve(JSON.parse(localStorage.getItem(`opr_fallback_${storeName}`) || '[]'));
+                    } catch (e) {
+                        resolve([]);
+                    }
+                    return;
+                }
+                const tx = dbInstance.transaction(storeName, 'readonly');
+                const req = tx.objectStore(storeName).getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => resolve([]);
+            });
+        }
+
+        async function refreshAllCachedData() {
+            cachedUsers = await dbGetAll('users');
+            cachedLogs = (await dbGetAll('logs')).sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+            cachedArchive = (await dbGetAll('opr_archive')).sort((a, b) => (b.savedAtMs || 0) - (a.savedAtMs || 0));
+
+            const badge = document.getElementById('nav-archive-count');
+            if (badge) badge.textContent = cachedArchive.length;
+
+            renderSavedAccountsQuick();
+        }
+
+        async function recordSystemLog(actionType, details, userOverride = null) {
+            const actor = userOverride || currentUser || {
+                name: 'Pengguna Sistem',
+                staffId: 'TETAMU',
+                role: 'Pelapor',
+                org: 'Umum'
+            };
+            const now = new Date();
+            const logEntry = {
+                id: 'LOG_' + now.getTime() + '_' + Math.random().toString(36).substring(2, 6),
+                timestamp: formatTimestampMY(now),
+                createdAtMs: now.getTime(),
+                userName: actor.name,
+                staffId: actor.staffId,
+                userRole: actor.role,
+                userOrg: actor.org,
+                action: actionType,
+                details: details
+            };
+            await dbPut('logs', logEntry);
+            await refreshAllCachedData();
+        }
+
+        // --- Pengurusan Gerbang Pengguna (Auth) ---
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('form-login');
+            const regForm = document.getElementById('form-register');
+            const tabLogin = document.getElementById('auth-tab-login');
+            const tabReg = document.getElementById('auth-tab-register');
+
+            document.getElementById('login-error-msg').classList.add('hidden');
+            document.getElementById('reg-error-msg').classList.add('hidden');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                tabLogin.className = 'flex-1 pb-3 text-xs sm:text-sm font-extrabold border-b-2 border-blue-900 text-blue-900 transition cursor-pointer';
+                tabReg.className = 'flex-1 pb-3 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition cursor-pointer';
+            } else {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+                tabReg.className = 'flex-1 pb-3 text-xs sm:text-sm font-extrabold border-b-2 border-emerald-700 text-emerald-800 transition cursor-pointer';
+                tabLogin.className = 'flex-1 pb-3 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition cursor-pointer';
+            }
+        }
+
+        function renderSavedAccountsQuick() {
+            const box = document.getElementById('saved-accounts-quick');
+            const list = document.getElementById('saved-accounts-list');
+            if (!box || !list) return;
+
+            if (cachedUsers.length === 0) {
+                box.classList.add('hidden');
+                return;
+            }
+            box.classList.remove('hidden');
+            list.innerHTML = cachedUsers.slice(0, 5).map(u => `
+                <button type="button" onclick="fillLoginIdentifier('${escapeHtml(u.staffId)}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 border border-slate-200 text-[11px] font-semibold text-slate-700 cursor-pointer">
+                    ${escapeHtml(u.name)} (${escapeHtml(u.staffId)})
+                </button>
+            `).join('');
+        }
+
+        function fillLoginIdentifier(idVal) {
+            document.getElementById('login-identifier').value = idVal;
+            document.getElementById('login-password').focus();
+        }
+
+        async function handleRegisterSubmit(event) {
+            event.preventDefault();
+            const errBox = document.getElementById('reg-error-msg');
+            errBox.classList.add('hidden');
+
+            const name = document.getElementById('reg-name').value.trim().toUpperCase();
+            const staffId = document.getElementById('reg-staffid').value.trim().toUpperCase();
+            const role = document.getElementById('reg-role').value.trim();
+            const org = document.getElementById('reg-org').value.trim().toUpperCase();
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const password = document.getElementById('reg-password').value;
+
+            const duplicate = cachedUsers.find(u => u.staffId.toUpperCase() === staffId || u.email.toLowerCase() === email);
+            if (duplicate) {
+                errBox.textContent = 'ID Kakitangan atau E-mel ini telah didaftarkan. Sila log masuk menggunakan akaun sedia ada.';
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            const now = new Date();
+            const newUser = {
+                id: 'USR_' + now.getTime(),
+                name,
+                staffId,
+                role,
+                org,
+                email,
+                phone,
+                password,
+                registeredAt: formatTimestampMY(now),
+                registeredAtMs: now.getTime()
+            };
+
+            await dbPut('users', newUser);
+            await recordSystemLog('Daftar Akaun', `Pendaftaran pengguna baharu: ${name} (${staffId}) - ${org}`, newUser);
+            await completeUserSession(newUser, true);
+            showToast(`Selamat datang, ${name}! Akaun anda berjaya didaftarkan.`, 'success');
+        }
+
+        async function handleLoginSubmit(event) {
+            event.preventDefault();
+            const errBox = document.getElementById('login-error-msg');
+            errBox.classList.add('hidden');
+
+            const identifier = document.getElementById('login-identifier').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value;
+
+            const matched = cachedUsers.find(u =>
+                (u.staffId.toLowerCase() === identifier || u.email.toLowerCase() === identifier) &&
+                u.password === password
+            );
+
+            if (!matched) {
+                errBox.textContent = 'ID Pengguna/E-mel atau Kata Laluan tidak sepadan. Sila semak semula atau daftar akaun baharu.';
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            await recordSystemLog('Log Masuk', `Pengguna log masuk ke sistem (${matched.staffId})`, matched);
+            await completeUserSession(matched, false);
+            showToast(`Log masuk berjaya. Selamat kembali, ${matched.name}!`, 'success');
+        }
+
+        async function quickDemoLogin() {
+            let demoUser = cachedUsers.find(u => u.staffId === 'DEMO-2026');
+            if (!demoUser) {
+                const now = new Date();
+                demoUser = {
+                    id: 'USR_DEMO_2026',
+                    name: 'PN. NURUL AIN BINTI AHMAD ZAKI',
+                    staffId: 'DEMO-2026',
+                    role: 'Setiausaha Program / Pelapor',
+                    org: 'SEKOLAH MENENGAH KEBANGSAAN SERI PERDANA',
+                    email: 'pelapor.demo@organisasi.gov.my',
+                    phone: '012-3456789',
+                    password: 'demo',
+                    registeredAt: formatTimestampMY(now),
+                    registeredAtMs: now.getTime()
+                };
+                await dbPut('users', demoUser);
+                await recordSystemLog('Daftar Akaun', 'Pendaftaran automatik Akaun Demo Sistem', demoUser);
+            }
+            await recordSystemLog('Log Masuk', 'Log masuk pantas menggunakan Akaun Demo', demoUser);
+            await completeUserSession(demoUser, false);
+            showToast('Log masuk pantas berjaya (Akaun Demo).', 'success');
+        }
+
+        async function completeUserSession(user, isNewRegistration) {
+            currentUser = user;
+            sessionStorage.setItem('opr_active_user_id', user.id);
+
+            document.getElementById('nav-user-name').textContent = user.name;
+            document.getElementById('nav-user-role').textContent = `${user.role} • ${user.org}`;
+            document.getElementById('auth-gate').classList.add('hidden');
+
+            // Auto-isi maklumat penyedia & organisasi jika pendaftaran baharu atau borang masih kosong
+            if (isNewRegistration || !appState.prepName) {
+                appState.prepName = user.name;
+                appState.prepRole = user.role;
+                if (!appState.org) appState.org = user.org;
+                syncInputsFromState();
+                renderDocument();
+            }
+
+            await refreshAllCachedData();
+            updatePreviewScale();
+        }
+
+        async function logoutUser() {
+            if (currentUser) {
+                await recordSystemLog('Log Keluar', `Pengguna log keluar daripada sistem (${currentUser.staffId})`, currentUser);
+            }
+            currentUser = null;
+            sessionStorage.removeItem('opr_active_user_id');
+            document.getElementById('login-password').value = '';
+            document.getElementById('auth-gate').classList.remove('hidden');
+            showToast('Anda telah log keluar daripada sistem.', 'info');
+        }
+
+        // --- Pengurusan Pusat Rekod & Arkib Salinan OPR ---
+        async function saveCurrentOprToArchive(statusLabel = 'Disimpan Manual', silent = false) {
+            const now = new Date();
+            const recordCode = appState.ref
+                ? appState.ref
+                : `OPR/${now.getFullYear()}/${String(cachedArchive.length + 1).padStart(3, '0')}`;
+
+            const archiveRecord = {
+                id: 'OPR_REC_' + now.getTime() + '_' + Math.random().toString(36).substring(2, 5),
+                recordCode,
+                title: appState.title || 'LAPORAN PROGRAM TANPA TAJUK',
+                category: appState.category,
+                org: appState.org || 'ORGANISASI',
+                date: appState.date || '—',
+                venue: appState.venue || '—',
+                organizer: appState.organizer || '—',
+                template: appState.template,
+                status: statusLabel,
+                savedAt: formatTimestampMY(now),
+                savedAtMs: now.getTime(),
+                createdByName: currentUser ? currentUser.name : (appState.prepName || 'Pelapor'),
+                createdByStaffId: currentUser ? currentUser.staffId : '—',
+                createdByRole: currentUser ? currentUser.role : (appState.prepRole || '—'),
+                snapshot: JSON.parse(JSON.stringify(appState))
+            };
+
+            await dbPut('opr_archive', archiveRecord);
+            await recordSystemLog(
+                statusLabel === 'Dijana PDF' ? 'Simpan Rekod OPR' : 'Simpan Rekod OPR',
+                `Salinan OPR disimpan (${archiveRecord.recordCode}): ${archiveRecord.title} [${statusLabel}]`
+            );
+
+            if (!silent) {
+                showToast(`Salinan OPR (${archiveRecord.recordCode}) berjaya disimpan ke Arkib Rekod!`, 'success');
+            }
+        }
+
+        async function openOprArchiveModal() {
+            await refreshAllCachedData();
+            renderArchiveList();
+            document.getElementById('modal-opr-archive').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function renderArchiveList() {
+            const container = document.getElementById('archive-list-container');
+            const query = (document.getElementById('archive-search-input')?.value || '').toLowerCase().trim();
+            const tplFilter = document.getElementById('archive-filter-template')?.value || 'all';
+            const statusFilter = document.getElementById('archive-filter-status')?.value || 'all';
+
+            const filtered = cachedArchive.filter(rec => {
+                const matchTpl = tplFilter === 'all' || rec.template === tplFilter;
+                const matchStatus = statusFilter === 'all' || rec.status === statusFilter;
+                const matchQuery = !query ||
+                    (rec.title || '').toLowerCase().includes(query) ||
+                    (rec.recordCode || '').toLowerCase().includes(query) ||
+                    (rec.venue || '').toLowerCase().includes(query) ||
+                    (rec.createdByName || '').toLowerCase().includes(query) ||
+                    (rec.org || '').toLowerCase().includes(query);
+                return matchTpl && matchStatus && matchQuery;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center">
+                        <p class="text-sm font-bold text-slate-700">Tiada Salinan Rekod OPR Ditemui</p>
+                        <p class="text-xs text-slate-500 mt-1">Setiap kali anda menekan butang "Simpan Rekod" atau "Jana & Muat Turun PDF", salinan OPR akan tersimpan di sini.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    ${filtered.map(rec => {
+                        const thumbSrc = rec.snapshot?.photos?.[0]?.src || rec.snapshot?.logo || '';
+                        const photoCount = rec.snapshot?.photos?.length || 0;
+                        const statusBadge = rec.status === 'Dijana PDF'
+                            ? 'bg-blue-50 text-blue-800 border-blue-200'
+                            : 'bg-amber-50 text-amber-800 border-amber-200';
+
+                        return `
+                            <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden flex flex-col justify-between hover:border-blue-300 transition">
+                                <div>
+                                    <!-- Pratonton Gambar Utama -->
+                                    <div class="h-32 bg-slate-100 border-b border-slate-200 relative flex items-center justify-center overflow-hidden">
+                                        ${thumbSrc
+                                            ? `<img src="${thumbSrc}" alt="Lakaran" class="w-full h-full object-contain p-1">`
+                                            : `<span class="text-xs font-bold text-slate-400">Tiada Gambar</span>`}
+                                        <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-900/80 text-white">
+                                            ${escapeHtml(rec.recordCode)}
+                                        </span>
+                                        <span class="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-bold border ${statusBadge}">
+                                            ${escapeHtml(rec.status)}
+                                        </span>
+                                        <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white/90 text-slate-700 border border-slate-200">
+                                            ${photoCount} Gambar
+                                        </span>
+                                    </div>
+
+                                    <!-- Maklumat Ringkas -->
+                                    <div class="p-3.5 space-y-1.5">
+                                        <div class="flex items-center justify-between text-[10px] font-bold text-blue-900 uppercase">
+                                            <span>${escapeHtml(templateNamesMap[rec.template] || rec.template)}</span>
+                                            <span class="text-slate-400 font-medium">${escapeHtml(rec.savedAt)}</span>
+                                        </div>
+                                        <h4 class="text-xs font-extrabold text-slate-900 uppercase leading-snug line-clamp-2">${escapeHtml(rec.title)}</h4>
+                                        <p class="text-[11px] text-slate-600 truncate"><strong>Tarikh:</strong> ${escapeHtml(rec.date)} • <strong>Lokasi:</strong> ${escapeHtml(rec.venue)}</p>
+                                        <p class="text-[11px] text-slate-500 truncate"><strong>Dijana Oleh:</strong> ${escapeHtml(rec.createdByName)} (${escapeHtml(rec.createdByStaffId)})</p>
+                                    </div>
+                                </div>
+
+                                <!-- Butang Tindakan -->
+                                <div class="px-3.5 py-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-1.5">
+                                    <button type="button" onclick="loadArchivedOprToEditor('${rec.id}')" class="flex-1 py-1.5 px-2.5 rounded-lg bg-blue-900 hover:bg-blue-800 text-white text-[11px] font-bold cursor-pointer">
+                                        Buka & Sunting
+                                    </button>
+                                    <button type="button" onclick="viewArchivedOprDetail('${rec.id}')" class="py-1.5 px-2.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-[11px] font-semibold cursor-pointer">
+                                        Butiran
+                                    </button>
+                                    <button type="button" onclick="deleteArchivedOpr('${rec.id}')" class="py-1.5 px-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold cursor-pointer" title="Padam Rekod">
+                                        Padam
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        async function loadArchivedOprToEditor(recordId) {
+            const found = cachedArchive.find(r => r.id === recordId);
+            if (!found || !found.snapshot) return;
+
+            appState = JSON.parse(JSON.stringify(found.snapshot));
+            syncInputsFromState();
+            setTemplate(appState.template || 'editorial');
+            setPhotoFrame(appState.photoFrame || 'bulat');
+            setPhotoDisplayMode(appState.photoDisplayMode || 'full_original');
+            setThemeColor(appState.colorKey || 'biru');
+
+            if (document.getElementById('input-photo-height')) {
+                document.getElementById('input-photo-height').value = appState.customPhotoHeight || 135;
+                document.getElementById('custom-height-label').textContent = `${appState.customPhotoHeight || 135}px`;
+            }
+            if (document.getElementById('input-photo-ratio')) {
+                document.getElementById('input-photo-ratio').value = appState.customPhotoRatio || 'auto';
+            }
+            if (document.getElementById('input-photo-fit')) {
+                document.getElementById('input-photo-fit').value = appState.customPhotoFit || 'contain';
+            }
+
+            renderDocument();
+            closeModal('modal-opr-archive');
+            await recordSystemLog('Sunting Rekod OPR', `Membuka semula salinan rekod (${found.recordCode}): ${found.title}`);
+            showToast(`Salinan "${found.title}" berjaya dimuatkan ke ruang kerja.`, 'success');
+        }
+
+        function viewArchivedOprDetail(recordId) {
+            const rec = cachedArchive.find(r => r.id === recordId);
+            if (!rec) return;
+            const s = rec.snapshot || {};
+            const body = document.getElementById('record-detail-body');
+            body.innerHTML = `
+                <div class="p-3 rounded-2xl bg-blue-50 border border-blue-200 flex flex-wrap justify-between gap-2">
+                    <div>
+                        <span class="text-[10px] font-extrabold text-blue-800 uppercase">Kod Rujukan Arkib</span>
+                        <p class="text-sm font-black text-blue-950">${escapeHtml(rec.recordCode)}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-extrabold text-blue-800 uppercase">Tarikh & Masa Rekod</span>
+                        <p class="font-bold text-slate-800">${escapeHtml(rec.savedAt)}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200"><span class="text-[10px] font-bold text-slate-500 block">Organisasi</span><strong>${escapeHtml(s.org)}</strong></div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200"><span class="text-[10px] font-bold text-slate-500 block">Templat Rekabentuk</span><strong>${escapeHtml(templateNamesMap[rec.template] || rec.template)}</strong></div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 col-span-2"><span class="text-[10px] font-bold text-slate-500 block">Tajuk Program</span><strong>${escapeHtml(s.title)}</strong></div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200"><span class="text-[10px] font-bold text-slate-500 block">Tarikh & Masa</span><strong>${escapeHtml(s.date)} (${escapeHtml(s.time)})</strong></div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200"><span class="text-[10px] font-bold text-slate-500 block">Tempat</span><strong>${escapeHtml(s.venue)}</strong></div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200"><span class="text-[10px] font-bold text-slate-500 block">Disediakan Oleh</span><strong>${escapeHtml(s.prepName)}</strong><br><span class="text-slate-500">${escapeHtml(s.prepRole)}</span></div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200"><span class="text-[10px] font-bold text-slate-500 block">Disahkan Oleh</span><strong>${escapeHtml(s.verName)}</strong><br><span class="text-slate-500">${escapeHtml(s.verRole)}</span></div>
+                </div>
+                <div class="p-3 rounded-xl border border-slate-200">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Objektif / Ringkasan</span>
+                    <p class="whitespace-pre-line text-slate-800">${escapeHtml(s.objectives || '—')}</p>
+                </div>
+                <div class="p-3 rounded-xl border border-slate-200">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Impak / Pencapaian</span>
+                    <p class="whitespace-pre-line text-slate-800">${escapeHtml(s.impact || '—')}</p>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModal('modal-record-detail'); loadArchivedOprToEditor('${rec.id}')" class="px-4 py-2 rounded-xl bg-blue-900 text-white font-bold cursor-pointer">
+                        Buka & Muat Turun PDF
+                    </button>
+                </div>
+            `;
+            document.getElementById('modal-record-detail').classList.remove('hidden');
+        }
+
+        async function deleteArchivedOpr(recordId) {
+            const rec = cachedArchive.find(r => r.id === recordId);
+            await dbDelete('opr_archive', recordId);
+            await recordSystemLog('Simpan Rekod OPR', `Memadam salinan rekod dari arkib: ${rec ? rec.title : recordId}`);
+            renderArchiveList();
+            showToast('Salinan rekod OPR telah dipadam daripada arkib.', 'info');
+        }
+
+        // --- Pengurusan Rekod Pengguna & Log Penggunaan Sistem ---
+        async function openSystemLogsModal() {
+            await refreshAllCachedData();
+            document.getElementById('stat-total-users').textContent = cachedUsers.length;
+            document.getElementById('stat-total-logs').textContent = cachedLogs.length;
+            document.getElementById('stat-total-oprs').textContent = cachedArchive.length;
+            document.getElementById('stat-total-pdfs').textContent = cachedLogs.filter(l => l.action === 'Muat Turun PDF').length;
+
+            renderLogsTable();
+            renderUsersTable();
+            document.getElementById('modal-system-logs').classList.remove('hidden');
+        }
+
+        function switchAdminSubtab(subtab) {
+            const logsPanel = document.getElementById('subtab-logs-panel');
+            const usersPanel = document.getElementById('subtab-users-panel');
+            const btnLogs = document.getElementById('subtab-logs-btn');
+            const btnUsers = document.getElementById('subtab-users-btn');
+
+            if (subtab === 'logs') {
+                logsPanel.classList.remove('hidden');
+                usersPanel.classList.add('hidden');
+                btnLogs.className = 'px-4 py-2 text-xs font-extrabold rounded-t-xl bg-white border-t border-x border-slate-200 text-blue-900 cursor-pointer';
+                btnUsers.className = 'px-4 py-2 text-xs font-bold rounded-t-xl text-slate-600 hover:text-slate-900 cursor-pointer';
+            } else {
+                logsPanel.classList.add('hidden');
+                usersPanel.classList.remove('hidden');
+                btnUsers.className = 'px-4 py-2 text-xs font-extrabold rounded-t-xl bg-white border-t border-x border-slate-200 text-emerald-800 cursor-pointer';
+                btnLogs.className = 'px-4 py-2 text-xs font-bold rounded-t-xl text-slate-600 hover:text-slate-900 cursor-pointer';
+            }
+        }
+
+        function renderLogsTable() {
+            const tbody = document.getElementById('logs-table-body');
+            const query = (document.getElementById('log-search-input')?.value || '').toLowerCase().trim();
+            const actionFilter = document.getElementById('log-filter-action')?.value || 'all';
+
+            const filtered = cachedLogs.filter(log => {
+                const matchAct = actionFilter === 'all' || log.action === actionFilter;
+                const matchQ = !query ||
+                    (log.userName || '').toLowerCase().includes(query) ||
+                    (log.staffId || '').toLowerCase().includes(query) ||
+                    (log.details || '').toLowerCase().includes(query);
+                return matchAct && matchQ;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Tiada rekod log penggunaan ditemui.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(log => `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-2 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">${escapeHtml(log.timestamp)}</td>
+                    <td class="py-2 px-3">
+                        <span class="font-bold text-slate-900 block">${escapeHtml(log.userName)}</span>
+                        <span class="text-[10.5px] text-slate-500">${escapeHtml(log.staffId)}</span>
+                    </td>
+                    <td class="py-2 px-3 text-slate-600">
+                        <span class="block font-medium">${escapeHtml(log.userRole)}</span>
+                        <span class="text-[10.5px] text-slate-400">${escapeHtml(log.userOrg)}</span>
+                    </td>
+                    <td class="py-2 px-3 whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-900 border border-blue-200">${escapeHtml(log.action)}</span>
+                    </td>
+                    <td class="py-2 px-3 text-slate-700">${escapeHtml(log.details)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('users-table-body');
+            const query = (document.getElementById('user-search-input')?.value || '').toLowerCase().trim();
+
+            const filtered = cachedUsers.filter(u =>
+                !query ||
+                (u.name || '').toLowerCase().includes(query) ||
+                (u.staffId || '').toLowerCase().includes(query) ||
+                (u.role || '').toLowerCase().includes(query) ||
+                (u.org || '').toLowerCase().includes(query)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">Tiada pengguna berdaftar ditemui.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(u => `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-2.5 px-3 font-bold text-slate-900">${escapeHtml(u.name)}</td>
+                    <td class="py-2.5 px-3 font-mono text-[11px] text-blue-900 font-bold">${escapeHtml(u.staffId)}</td>
+                    <td class="py-2.5 px-3 text-slate-700">${escapeHtml(u.role)}</td>
+                    <td class="py-2.5 px-3 text-slate-700">${escapeHtml(u.org)}</td>
+                    <td class="py-2.5 px-3 text-slate-600">${escapeHtml(u.email)}<br><span class="text-[10.5px] text-slate-400">${escapeHtml(u.phone)}</span></td>
+                    <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500">${escapeHtml(u.registeredAt)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // --- Fungsi Eksport CSV & Sandaran JSON ---
+        function downloadTextFile(filename, content, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function csvSafe(val) {
+            return `"${String(val || '').replace(/"/g, '""')}"`;
+        }
+
+        function exportArchiveCSV() {
+            const headers = ['Kod Rekod', 'Tajuk Program', 'Kategori', 'Organisasi', 'Tarikh Program', 'Lokasi', 'Templat', 'Status', 'Dijana Oleh', 'ID Kakitangan', 'Tarikh Simpan'];
+            const rows = cachedArchive.map(r => [
+                r.recordCode, r.title, r.category, r.org, r.date, r.venue,
+                templateNamesMap[r.template] || r.template, r.status,
+                r.createdByName, r.createdByStaffId, r.savedAt
+            ].map(csvSafe).join(','));
+            downloadTextFile('Senarai_Arkib_OPR.csv', '\uFEFF' + [headers.join(','), ...rows].join('\n'), 'text/csv;charset=utf-8;');
+            showToast('Senarai Arkib OPR berjaya dieksport ke CSV.', 'success');
+        }
+
+        function exportUsersCSV() {
+            const headers = ['Nama Penuh', 'ID Kakitangan', 'Jawatan', 'Bahagian/Organisasi', 'E-mel', 'No. Telefon', 'Tarikh Daftar'];
+            const rows = cachedUsers.map(u => [
+                u.name, u.staffId, u.role, u.org, u.email, u.phone, u.registeredAt
+            ].map(csvSafe).join(','));
+            downloadTextFile('Rekod_Pengguna_Sistem_OPR.csv', '\uFEFF' + [headers.join(','), ...rows].join('\n'), 'text/csv;charset=utf-8;');
+            showToast('Rekod Pengguna Berdaftar berjaya dieksport ke CSV.', 'success');
+        }
+
+        function exportLogsCSV() {
+            const headers = ['Tarikh & Masa', 'Nama Pengguna', 'ID Kakitangan', 'Jawatan', 'Organisasi', 'Aktiviti', 'Butiran Rekod'];
+            const rows = cachedLogs.map(l => [
+                l.timestamp, l.userName, l.staffId, l.userRole, l.userOrg, l.action, l.details
+            ].map(csvSafe).join(','));
+            downloadTextFile('Log_Penggunaan_Sistem_OPR.csv', '\uFEFF' + [headers.join(','), ...rows].join('\n'), 'text/csv;charset=utf-8;');
+            showToast('Log Penggunaan Sistem berjaya dieksport ke CSV.', 'success');
+        }
+
+        function exportFullBackupJSON() {
+            const backupPayload = {
+                exportedAt: formatTimestampMY(new Date()),
+                users: cachedUsers,
+                logs: cachedLogs,
+                opr_archive: cachedArchive
+            };
+            downloadTextFile('Sandaran_Penuh_Sistem_OPR.json', JSON.stringify(backupPayload, null, 2), 'application/json');
+            showToast('Fail sandaran penuh (JSON) berjaya dimuat turun.', 'success');
+        }
+
+        function importFullBackupJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (Array.isArray(parsed.users)) {
+                        for (const u of parsed.users) await dbPut('users', u);
+                    }
+                    if (Array.isArray(parsed.logs)) {
+                        for (const l of parsed.logs) await dbPut('logs', l);
+                    }
+                    if (Array.isArray(parsed.opr_archive)) {
+                        for (const r of parsed.opr_archive) await dbPut('opr_archive', r);
+                    }
+                    await refreshAllCachedData();
+                    renderArchiveList();
+                    showToast('Data sandaran (JSON) berjaya dipulihkan ke sistem!', 'success');
+                } catch (err) {
+                    showToast('Fail JSON tidak sah atau rosak.', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // =========================================================================
+        // 9. INISIALISASI APLIKASI
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initDatabase();
+            await refreshAllCachedData();
             loadSampleData();
             updatePreviewScale();
+
+            // Pulihkan sesi aktif dalam tab pelayar yang sama jika ada
+            const activeId = sessionStorage.getItem('opr_active_user_id');
+            if (activeId) {
+                const existingUser = cachedUsers.find(u => u.id === activeId);
+                if (existingUser) {
+                    await completeUserSession(existingUser, false);
+                }
+            }
         });
 
         window.addEventListener('resize', () => {
